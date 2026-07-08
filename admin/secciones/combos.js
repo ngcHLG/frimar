@@ -7,25 +7,18 @@ window.combos = {
     `;
     await combosCargar();
     await cargarProductosEnSelectCombo();
-    document.getElementById('combo-tipo').addEventListener('change', toggleCamposMoneda);
     document.getElementById('btn-combo-guardar').addEventListener('click', comboGuardar);
   },
   abrirNuevo: async function() {
     document.getElementById('combo-id').value = '';
     document.getElementById('combo-nombre').value = '';
     document.getElementById('combo-tipo').value = 'porcentaje';
-    document.getElementById('combo-valor-porcentaje').value = '';
     document.getElementById('combo-activo').checked = true;
     document.getElementById('combo-modal-titulo').textContent = 'Nuevo combo';
 
-    // Limpiar monedas fijas
-    document.querySelectorAll('.moneda-fija-check').forEach(cb => cb.checked = false);
-    document.querySelectorAll('.moneda-fija-precio').forEach(inp => inp.value = '');
-
-    // Cargar listas de monedas y productos
+    // Limpiar monedas y cargar productos
     await llenarMonedasFijo({});
     await cargarProductosEnSelectCombo();
-    toggleCamposMoneda();
 
     new bootstrap.Modal(document.getElementById('comboModal')).show();
   }
@@ -40,12 +33,8 @@ function modalHTML() {
           <input type="hidden" id="combo-id">
           <div class="mb-3"><label class="form-label">Nombre</label><input type="text" class="form-control" id="combo-nombre" required></div>
           <div class="mb-3"><label class="form-label">Tipo de descuento</label><select class="form-select" id="combo-tipo"><option value="porcentaje">Porcentaje (%)</option><option value="fijo">Precio fijo</option></select></div>
-          <div id="div-porcentaje" class="mb-3">
-            <label class="form-label">Descuento (%)</label>
-            <input type="number" step="0.01" min="0" class="form-control" id="combo-valor-porcentaje">
-          </div>
-          <div id="div-fijo" class="mb-3" style="display:none;">
-            <label class="form-label">Precios por moneda</label>
+          <div class="mb-3">
+            <label class="form-label">Monedas y descuento</label>
             <div id="monedas-fijo-container">
               <!-- Se llena dinámicamente con monedas -->
             </div>
@@ -69,14 +58,15 @@ async function llenarMonedasFijo(preciosExistentes = {}) {
     container.innerHTML = '<p class="text-muted">No hay monedas definidas.</p>';
     return;
   }
+  const montos = preciosExistentes.montos || {};
   container.innerHTML = monedas.map(m => {
-    const checked = preciosExistentes.hasOwnProperty(m.codigo) ? 'checked' : '';
-    const precioValor = preciosExistentes[m.codigo] || '';
+    const checked = montos.hasOwnProperty(m.codigo) ? 'checked' : '';
+    const valor = montos[m.codigo] !== undefined ? montos[m.codigo] : '';
     return `
       <div class="form-check form-check-inline mb-2">
         <input class="form-check-input moneda-fija-check" type="checkbox" id="moneda-fija-${m.codigo}" value="${m.codigo}" ${checked} onchange="togglePrecioFijo('${m.codigo}')">
         <label class="form-check-label" for="moneda-fija-${m.codigo}">${m.codigo}</label>
-        <input type="number" step="0.01" min="0" class="form-control form-control-sm d-inline-block ms-2 moneda-fija-precio" id="precio-fijo-${m.codigo}" value="${precioValor}" style="width: 100px;" ${checked ? '' : 'disabled'}>
+        <input type="number" step="0.01" min="0" class="form-control form-control-sm d-inline-block ms-2 moneda-fija-precio" id="precio-fijo-${m.codigo}" value="${valor}" style="width: 100px;" ${checked ? '' : 'disabled'}>
       </div>`;
   }).join('');
 }
@@ -89,12 +79,6 @@ window.togglePrecioFijo = function(codigo) {
     if (!checkbox.checked) precioInput.value = '';
   }
 };
-
-function toggleCamposMoneda() {
-  const tipo = document.getElementById('combo-tipo').value;
-  document.getElementById('div-porcentaje').style.display = tipo === 'porcentaje' ? 'block' : 'none';
-  document.getElementById('div-fijo').style.display = tipo === 'fijo' ? 'block' : 'none';
-}
 
 async function cargarProductosEnSelectCombo() {
   const { data } = await window.guajiroPC.from('productos').select('id, nombre, precios').eq('activo', true).order('nombre');
@@ -115,7 +99,8 @@ async function combosCargar() {
     const precios = c.precios || {};
     let descuentoTexto = '';
     if (precios.tipo === 'porcentaje') {
-      descuentoTexto = `-${precios.valor}%`;
+      const montos = precios.montos || {};
+      descuentoTexto = Object.keys(montos).map(mon => `${mon}: -${montos[mon]}%`).join(', ');
     } else if (precios.tipo === 'fijo') {
       const montos = precios.montos || {};
       descuentoTexto = Object.keys(montos).map(mon => `${mon}: ${montos[mon]}`).join(', ');
@@ -150,23 +135,17 @@ async function comboGuardar() {
   const activo = document.getElementById('combo-activo').checked;
   if (!nombre) { alert('El nombre es obligatorio'); return; }
 
-  let precios = {};
-  if (tipo === 'porcentaje') {
-    const valor = parseFloat(document.getElementById('combo-valor-porcentaje').value);
-    if (isNaN(valor) || valor < 0) { alert('Ingresa un porcentaje válido'); return; }
-    precios = { tipo: 'porcentaje', valor: valor };
-  } else if (tipo === 'fijo') {
-    const montos = {};
-    document.querySelectorAll('.moneda-fija-check:checked').forEach(cb => {
-      const moneda = cb.value;
-      const input = document.getElementById(`precio-fijo-${moneda}`);
-      if (input && input.value && parseFloat(input.value) >= 0) {
-        montos[moneda] = parseFloat(input.value);
-      }
-    });
-    if (Object.keys(montos).length === 0) { alert('Selecciona al menos una moneda con precio fijo'); return; }
-    precios = { tipo: 'fijo', montos: montos };
-  }
+  const montos = {};
+  document.querySelectorAll('.moneda-fija-check:checked').forEach(cb => {
+    const moneda = cb.value;
+    const input = document.getElementById(`precio-fijo-${moneda}`);
+    if (input && input.value && parseFloat(input.value) >= 0) {
+      montos[moneda] = parseFloat(input.value);
+    }
+  });
+  if (Object.keys(montos).length === 0) { alert('Selecciona al menos una moneda con un valor.'); return; }
+
+  const precios = { tipo: tipo, montos: montos };
 
   const checks = document.querySelectorAll('#combo-productos-check input[type="checkbox"]:checked');
   if (checks.length === 0) { alert('Selecciona al menos un producto'); return; }
@@ -179,7 +158,7 @@ async function comboGuardar() {
   const comboData = {
     nombre,
     tipo_descuento: tipo,
-    valor_descuento: tipo === 'porcentaje' ? precios.valor : 0,
+    valor_descuento: tipo === 'porcentaje' ? (montos[Object.keys(montos)[0]] || 0) : 0,
     precios: precios,
     activo
   };
@@ -206,15 +185,7 @@ window.combos.editar = async function(id) {
   document.getElementById('combo-modal-titulo').textContent = 'Editar combo';
 
   await cargarProductosEnSelectCombo();
-
-  const precios = c.precios || {};
-  if (precios.tipo === 'porcentaje') {
-    document.getElementById('combo-valor-porcentaje').value = precios.valor || '';
-  } else {
-    document.getElementById('combo-valor-porcentaje').value = '';
-  }
-
-  await llenarMonedasFijo(precios.tipo === 'fijo' ? precios.montos || {} : {});
+  await llenarMonedasFijo(c.precios || {});
 
   const { data: items } = await window.guajiroPC.from('combo_items').select('product_id, cantidad').eq('combo_id', id);
   if (items) {
@@ -226,7 +197,6 @@ window.combos.editar = async function(id) {
     });
   }
 
-  toggleCamposMoneda();
   new bootstrap.Modal(document.getElementById('comboModal')).show();
 };
 

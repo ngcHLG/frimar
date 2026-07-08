@@ -43,7 +43,6 @@ async function agregarComboAlCarrito(comboId) {
   const grupo = carrito.find(item => item.id === comboId && item.esCombo);
   if (grupo) {
     grupo.cantidad += cantidadExtraida;
-    // actualizamos los items por si cambiaron
     grupo.items = precioData.items.map(i => ({ nombre: i.productos.nombre, cantidad: i.cantidad }));
   } else {
     carrito.push({
@@ -104,9 +103,9 @@ function actualizarCarrito() {
   document.getElementById('subtotal-carrito').textContent = subtotal.toFixed(2);
   document.getElementById('subtotal-moneda').textContent = monedaActiva;
 
-  const metodoPago = document.getElementById('metodo-pago')?.value || 'efectivo';
+  // Usamos la variable global metodoPagoActivo
   let recargo = 0;
-  if (metodoPago === 'transferencia' && recargoTransferencia > 0) {
+  if (metodoPagoActivo === 'transferencia' && recargoTransferencia > 0) {
     recargo = subtotal * (recargoTransferencia / 100);
     document.getElementById('recargo-aplicado').textContent = recargo.toFixed(2);
     document.getElementById('recargo-moneda').textContent = monedaActiva;
@@ -126,13 +125,11 @@ function actualizarCarrito() {
   const envioDesglose = document.getElementById('envio-desglose');
   if (envio > 0) {
     if (monedaActiva === 'CUP') {
-      // Mostrar envío en la línea normal, en CUP
       document.getElementById('envio-aplicado').textContent = envio.toFixed(2);
       document.getElementById('envio-moneda').textContent = 'CUP';
       envioDesglose.classList.remove('d-none');
       envioCUP.classList.add('d-none');
     } else {
-      // Mostrar envío en línea separada como "Envío (CUP)"
       document.getElementById('envio-cup-aplicado').textContent = envio.toFixed(2);
       envioCUP.classList.remove('d-none');
       envioDesglose.classList.add('d-none');
@@ -167,4 +164,4 @@ function actualizarExtras(index, valor) {
 function eliminarDelCarrito(index) {
   carrito.splice(index, 1);
   actualizarCarrito();
-}
+                                     }

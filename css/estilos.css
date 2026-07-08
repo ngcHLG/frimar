@@ -239,7 +239,7 @@ h1, h2, h3, h4, h5, .navbar-brand, .card-title, .offcanvas-title {
 .moneda-list {
   display: none;
   position: fixed;
-  bottom: 20px;
+  bottom: 56px;
   right: 90px;
   z-index: 1031;
   flex-direction: row;

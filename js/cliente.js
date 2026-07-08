@@ -36,8 +36,7 @@ function inyectarModalCambioMoneda() {
             <p>Si cambias de moneda, se vaciará tu carrito actual porque los precios pueden variar. ¿Deseas continuar?</p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-accent btn-sm" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn btn-accent btn-sm" id="btn-confirmar-cambio-moneda">Vaciar y cambiar</button>
+            <button type="button" class="btn btn-accent btn-sm" id="btn-confirmar-cambio-moneda">Vaciar</button>
           </div>
         </div>
       </div>

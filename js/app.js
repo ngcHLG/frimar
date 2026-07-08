@@ -34,12 +34,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   await verificarHorario();
   renderProductos();
 
-  // Eventos
-  document.getElementById('metodo-pago').addEventListener('change', () => {
-    actualizarInfoRecargo();
-    actualizarCarrito();
-  });
-
   configurarSelectorMoneda();
   configurarBotonPedido();
 

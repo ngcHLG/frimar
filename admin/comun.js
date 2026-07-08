@@ -8,7 +8,7 @@
 
   // Verificar sesión
   async function verificarSesion() {
-    const { data: { session } } = await window.comecomeSupabase.auth.getSession();
+    const { data: { session } } = await window.guajiroPC.auth.getSession();
     if (!session) {
       window.location.href = 'login.html';
       return null;

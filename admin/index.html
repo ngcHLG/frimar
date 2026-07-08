@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GUAJIRO - Panel de Control</title>
-  <link rel="icon" type="image/png" href="../icon_regular_small.png">
+  <title>GUAJIRO - Administración</title>
+  <link rel="icon" type="image/png" href="icon_regular_small.png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,7 +20,6 @@
       --c-06: #F2F2F2;
       --c-white: #FFFFFF;
     }
-
     [data-theme="light"] {
       --bg-body: var(--c-06);
       --bg-surface: var(--c-white);
@@ -33,7 +32,6 @@
       --nav-bg: var(--c-02);
       --nav-text: var(--c-05);
     }
-
     [data-theme="dark"] {
       --bg-body: var(--c-01);
       --bg-surface: var(--c-02);
@@ -46,114 +44,71 @@
       --nav-bg: var(--c-01);
       --nav-text: var(--c-06);
     }
-
     * { transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
-
     body {
       background-color: var(--bg-body);
       font-family: 'Inter', sans-serif;
       color: var(--text-main);
     }
-
-    h1, h2, h3, h4, h5, .navbar-brand {
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 700;
-    }
-
+    h2, h3, h4, .navbar-brand { font-family: 'Montserrat', sans-serif; font-weight: 700; }
     .navbar-admin {
       background-color: var(--nav-bg) !important;
       border-bottom: 1px solid var(--border-color);
     }
     .navbar-brand {
       color: var(--nav-text) !important;
-      font-size: 1.3rem;
-      letter-spacing: 1px;
-      text-transform: uppercase;
+      font-size: 1.3rem; letter-spacing: 1px; text-transform: uppercase;
+      text-decoration: none;
     }
-
     .btn-accent {
-      background-color: var(--accent-btn);
-      color: var(--accent-text);
-      border: none;
-      border-radius: 4px;
-      font-weight: 600;
-      padding: 0.4rem 1rem;
-      font-size: 0.85rem;
-      transition: background-color 0.2s ease;
+      background-color: var(--accent-btn); color: var(--accent-text);
+      border: none; border-radius: 4px; font-weight: 600;
+      padding: 0.3rem 0.8rem; font-size: 0.85rem;
     }
-    .btn-accent:hover {
-      background-color: var(--accent-hover);
-      color: var(--accent-text);
-    }
-
+    .btn-accent:hover { background-color: var(--accent-hover); color: var(--accent-text); }
     .btn-outline-accent {
-      color: var(--text-main);
-      border: 1px solid var(--border-color);
-      background: transparent;
-      padding: 0.4rem 1rem;
-      font-size: 0.85rem;
-      border-radius: 4px;
+      color: var(--text-main); border: 1px solid var(--border-color);
+      background: transparent; padding: 0.3rem 0.8rem; font-size: 0.85rem; border-radius: 4px;
     }
     .btn-outline-accent:hover {
-      background-color: var(--accent-btn);
-      color: var(--accent-text);
-      border-color: var(--accent-btn);
+      background-color: var(--accent-btn); color: var(--accent-text); border-color: var(--accent-btn);
     }
 
-    .menu-item {
+    /* Tabs */
+    .admin-tabs {
       background-color: var(--bg-surface);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      color: var(--text-main);
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      padding: 1.8rem 1rem;
-      transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.5rem 0;
+      position: sticky; top: 56px; z-index: 1020;
+      overflow-x: auto; white-space: nowrap;
     }
-    .menu-item:hover {
-      transform: translateY(-3px);
-      background-color: var(--bg-surface);
-      color: var(--accent-btn);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-      border-color: var(--accent-btn);
+    .admin-tabs .container { display: flex; gap: 1rem; }
+    .tab-btn {
+      background: transparent; color: var(--text-muted, var(--c-04));
+      border: none; border-bottom: 3px solid transparent;
+      padding: 0.5rem 0.4rem; font-weight: 600; font-size: 0.9rem;
+      text-transform: uppercase; cursor: pointer; transition: 0.2s;
     }
-    .menu-item i { font-size: 2.2rem; margin-bottom: 0.5rem; color: var(--accent-btn); }
-    .menu-item span { font-size: 0.95rem; font-weight: 600; }
+    .tab-btn:hover { color: var(--text-main); border-bottom-color: var(--border-color); }
+    .tab-btn.active {
+      color: var(--accent-btn); border-bottom-color: var(--accent-btn);
+    }
 
     .fab-btn {
+      position: fixed; bottom: 20px; right: 20px; z-index: 1050;
       width: 48px; height: 48px; border-radius: 50%;
       background-color: var(--accent-btn); color: var(--accent-text);
       border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.3rem; cursor: pointer;
-      position: fixed; bottom: 20px; right: 20px; z-index: 1050;
+      display: flex; align-items: center; justify-content: center; font-size: 1.3rem; cursor: pointer;
     }
     .fab-btn:hover { background-color: var(--accent-hover); }
-
-    @media (max-width: 575px) {
-      .menu-item {
-        flex-direction: row;
-        justify-content: flex-start;
-        padding: 1rem 1.2rem;
-      }
-      .menu-item i {
-        font-size: 1.6rem;
-        margin-bottom: 0;
-        margin-right: 1rem;
-      }
-    }
   </style>
 </head>
 <body>
-
-  <nav class="navbar navbar-dark navbar-admin py-3">
+  <nav class="navbar navbar-dark navbar-admin py-2">
     <div class="container">
       <a class="navbar-brand d-flex align-items-center m-0" href="#">
-        <img src="../icon_regular_small.png" alt="GUAJIRO" style="height: 28px; width: 28px; object-fit: contain; margin-right: 0.5rem;">
+        <img src="icon_regular_small.png" alt="GUAJIRO" style="height: 28px; width: 28px; object-fit: contain; margin-right: 0.5rem;">
         GUAJIRO
       </a>
       <button class="btn btn-outline-accent btn-sm" onclick="cerrarSesion()">
@@ -162,55 +117,11 @@
     </div>
   </nav>
 
-  <main class="container my-5">
-    <h2 class="mb-4 d-flex align-items-center gap-2" style="color: var(--text-main);">
-      <i class="bi bi-speedometer2" style="color: var(--accent-btn);"></i> Panel de control
-    </h2>
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
-      <div class="col">
-        <a href="categorias.html" class="menu-item">
-          <i class="bi bi-tags-fill"></i>
-          <span>Categorías</span>
-        </a>
-      </div>
-      <div class="col">
-        <a href="productos.html" class="menu-item">
-          <i class="bi bi-box-fill"></i>
-          <span>Productos</span>
-        </a>
-      </div>
-      <div class="col">
-        <a href="combos.html" class="menu-item">
-          <i class="bi bi-star-fill"></i>
-          <span>Combos</span>
-        </a>
-      </div>
-      <div class="col">
-        <a href="horarios.html" class="menu-item">
-          <i class="bi bi-clock-fill"></i>
-          <span>Horarios</span>
-        </a>
-      </div>
-      <div class="col">
-        <a href="zonas.html" class="menu-item">
-          <i class="bi bi-map-fill"></i>
-          <span>Zonas</span>
-        </a>
-      </div>
-      <div class="col">
-        <a href="pedidos.html" class="menu-item">
-          <i class="bi bi-receipt"></i>
-          <span>Pedidos</span>
-        </a>
-      </div>
-      <div class="col">
-        <a href="config.html" class="menu-item">
-          <i class="bi bi-gear-fill"></i>
-          <span>Ajustes</span>
-        </a>
-      </div>
-    </div>
-  </main>
+  <div class="admin-tabs">
+    <div class="container" id="tabs-container"></div>
+  </div>
+
+  <main class="container my-4" id="admin-content"></main>
 
   <button class="fab-btn" id="btn-theme-toggle" aria-label="Alternar tema">
     <i class="bi bi-moon-stars-fill" id="theme-icon"></i>
@@ -219,15 +130,71 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="comun.js"></script>
-
   <script>
+    // Tema
     document.getElementById('btn-theme-toggle').addEventListener('click', () => {
       const root = document.documentElement;
-      const currentTheme = root.getAttribute('data-theme');
-      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      const newTheme = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
       root.setAttribute('data-theme', newTheme);
       document.getElementById('theme-icon').className = newTheme === 'light' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
     });
+
+    // Tabs
+    const sections = [
+      { id: 'categorias', label: 'Categorías', file: 'secciones/categorias.js' },
+      { id: 'productos',  label: 'Productos',  file: 'secciones/productos.js' },
+      { id: 'combos',     label: 'Combos',     file: 'secciones/combos.js' },
+      { id: 'horarios',   label: 'Horarios',   file: 'secciones/horarios.js' },
+      { id: 'zonas',      label: 'Zonas',      file: 'secciones/zonas.js' },
+      { id: 'pedidos',    label: 'Pedidos',    file: 'secciones/pedidos.js' },
+      { id: 'config',     label: 'Ajustes',    file: 'secciones/config.js' }
+    ];
+
+    let currentSection = null;
+    let currentTab = null;
+
+    function renderTabs() {
+      const container = document.getElementById('tabs-container');
+      container.innerHTML = sections.map(s => 
+        `<button class="tab-btn" data-id="${s.id}">${s.label}</button>`
+      ).join('');
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id;
+          loadSection(id);
+        });
+      });
+    }
+
+    async function loadSection(id) {
+      const section = sections.find(s => s.id === id);
+      if (!section) return;
+
+      // Actualizar tab activo
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.querySelector(`.tab-btn[data-id="${id}"]`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      // Cargar script de sección si no está ya
+      if (!window.loadedSections) window.loadedSections = {};
+      if (!window.loadedSections[id]) {
+        await import(section.file);
+        window.loadedSections[id] = true;
+      }
+
+      // Renderizar sección
+      const container = document.getElementById('admin-content');
+      container.innerHTML = ''; // limpiar
+      if (typeof window[id]?.init === 'function') {
+        window[id].init(container);
+      } else {
+        container.innerHTML = '<p class="text-muted">Sección no disponible</p>';
+      }
+    }
+
+    // Inicializar
+    renderTabs();
+    loadSection('categorias'); // sección por defecto
   </script>
 </body>
 </html>

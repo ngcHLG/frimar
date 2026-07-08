@@ -18,3 +18,4 @@ let horarioAbierto = true;
 let recargoTransferencia = 0;
 let monedaActiva = 'CUP';
 let monedasDisponibles = [];
+let metodoPagoActivo = 'efectivo';   // método de pago actual, se actualiza dinámicamente

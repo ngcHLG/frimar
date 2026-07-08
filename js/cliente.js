@@ -300,4 +300,4 @@ async function verificarHorario() {
 
   document.getElementById('horario-aviso').classList.toggle('d-none', horarioAbierto);
   document.getElementById('horario-texto').textContent = textoHorario;
-          }
+  }

@@ -235,11 +235,11 @@ h1, h2, h3, h4, h5, .navbar-brand, .card-title, .offcanvas-title {
   border: 2px solid var(--bg-body);
 }
 
-/* --- Lista de monedas (horizontal, a la izquierda del FAB) --- */
+/* --- Lista de monedas: horizontal, a la izquierda del botón de moneda --- */
 .moneda-list {
   display: none;
   position: fixed;
-  bottom: 56px;
+  bottom: 158px;                 /* alineado con el botón de moneda activo */
   right: 90px;
   z-index: 1031;
   flex-direction: row;
@@ -365,4 +365,4 @@ h1, h2, h3, h4, h5, .navbar-brand, .card-title, .offcanvas-title {
   height: 35px;
   width: 90px;
   display: inline-block;
-}
+  }

@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function cargarConfig() {
-  const { data, error } = await window.comecomeSupabase
+  const { data, error } = await window.guajiroPC
     .from('configuracion')
     .select('recargo_transferencia')
     .single();
@@ -22,7 +22,7 @@ async function guardarConfig() {
     return;
   }
 
-  const { error } = await window.comecomeSupabase
+  const { error } = await window.guajiroPC
     .from('configuracion')
     .update({ recargo_transferencia: recargo })
     .eq('id', 1);

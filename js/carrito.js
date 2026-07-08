@@ -24,7 +24,8 @@ function agregarAlCarrito(idProducto) {
       permiteExtras: producto.permite_extras,
       cantidad: cantidadExtraida,
       extras: '',
-      esCombo: false
+      esCombo: false,
+      items: null
     });
   }
   inputElem.value = 1;
@@ -42,6 +43,8 @@ async function agregarComboAlCarrito(comboId) {
   const grupo = carrito.find(item => item.id === comboId && item.esCombo);
   if (grupo) {
     grupo.cantidad += cantidadExtraida;
+    // actualizamos los items por si cambiaron
+    grupo.items = precioData.items.map(i => ({ nombre: i.productos.nombre, cantidad: i.cantidad }));
   } else {
     carrito.push({
       id: comboId,
@@ -51,7 +54,8 @@ async function agregarComboAlCarrito(comboId) {
       permiteExtras: false,
       cantidad: cantidadExtraida,
       extras: '',
-      esCombo: true
+      esCombo: true,
+      items: precioData.items.map(i => ({ nombre: i.productos.nombre, cantidad: i.cantidad }))
     });
   }
   inputElem.value = 1;
@@ -78,7 +82,7 @@ function actualizarCarrito() {
       <div class="d-flex justify-content-between align-items-start mb-2">
         <div>
           <div class="fw-bold">${item.nombre}</div>
-          ${item.esCombo ? '<small class="text-muted">Lote</small>' : ''}
+          ${item.esCombo ? `<div class="small text-muted">${(item.items || []).map(i => `${i.cantidad}x ${i.nombre}`).join(', ')}</div>` : ''}
         </div>
         <span class="fw-bold">${(item.precio * item.cantidad).toFixed(2)} ${item.moneda || monedaActiva}</span>
       </div>
@@ -100,7 +104,7 @@ function actualizarCarrito() {
   document.getElementById('subtotal-carrito').textContent = subtotal.toFixed(2);
   document.getElementById('subtotal-moneda').textContent = monedaActiva;
 
-  const metodoPago = document.getElementById('metodo-pago').value;
+  const metodoPago = document.getElementById('metodo-pago')?.value || 'efectivo';
   let recargo = 0;
   if (metodoPago === 'transferencia' && recargoTransferencia > 0) {
     recargo = subtotal * (recargoTransferencia / 100);
@@ -111,18 +115,39 @@ function actualizarCarrito() {
     document.getElementById('recargo-desglose').classList.add('d-none');
   }
 
-  const repartoSelect = document.getElementById('reparto-select');
+  // Envío: siempre en CUP
+  const repartoInput = document.getElementById('reparto-input');
   let envio = 0;
-  if (repartoSelect && repartoSelect.selectedOptions[0]?.dataset.precio) {
-    envio = parseFloat(repartoSelect.selectedOptions[0].dataset.precio);
-    document.getElementById('envio-aplicado').textContent = envio.toFixed(2);
-    document.getElementById('envio-moneda').textContent = monedaActiva;
-    document.getElementById('envio-desglose').classList.remove('d-none');
-  } else {
-    document.getElementById('envio-desglose').classList.add('d-none');
+  if (repartoInput && repartoInput.dataset.precio) {
+    envio = parseFloat(repartoInput.dataset.precio);
   }
 
-  const total = subtotal + recargo + envio;
+  const envioCUP = document.getElementById('envio-cup-desglose');
+  const envioDesglose = document.getElementById('envio-desglose');
+  if (envio > 0) {
+    if (monedaActiva === 'CUP') {
+      // Mostrar envío en la línea normal, en CUP
+      document.getElementById('envio-aplicado').textContent = envio.toFixed(2);
+      document.getElementById('envio-moneda').textContent = 'CUP';
+      envioDesglose.classList.remove('d-none');
+      envioCUP.classList.add('d-none');
+    } else {
+      // Mostrar envío en línea separada como "Envío (CUP)"
+      document.getElementById('envio-cup-aplicado').textContent = envio.toFixed(2);
+      envioCUP.classList.remove('d-none');
+      envioDesglose.classList.add('d-none');
+    }
+  } else {
+    envioDesglose.classList.add('d-none');
+    envioCUP.classList.add('d-none');
+  }
+
+  // Total en moneda activa: subtotal + recargo (+ envío si moneda es CUP)
+  let total = subtotal + recargo;
+  if (monedaActiva === 'CUP' && envio > 0) {
+    total += envio;
+  }
+
   document.getElementById('total-pedido').textContent = total.toFixed(2);
   document.getElementById('total-moneda').textContent = monedaActiva;
 
@@ -130,7 +155,9 @@ function actualizarCarrito() {
   badge.textContent = conteoGlobal;
   badge.style.display = conteoGlobal > 0 ? 'flex' : 'none';
 
-  btnCheckout.disabled = carrito.length === 0 || !repartoSelect?.value;
+  // Habilitar checkout si hay productos y se ha seleccionado reparto (si hay repartos disponibles)
+  const repartoSeleccionado = repartoInput && repartoInput.dataset.precio;
+  btnCheckout.disabled = carrito.length === 0 || (window._repartosData?.length > 0 && !repartoSeleccionado);
 }
 
 function actualizarExtras(index, valor) {
@@ -140,4 +167,4 @@ function actualizarExtras(index, valor) {
 function eliminarDelCarrito(index) {
   carrito.splice(index, 1);
   actualizarCarrito();
-  }
+}

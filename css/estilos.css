@@ -239,7 +239,7 @@ h1, h2, h3, h4, h5, .navbar-brand, .card-title, .offcanvas-title {
 .moneda-list {
   display: none;
   position: fixed;
-  bottom: 158px;                 /* alineado con el botón de moneda activo */
+  bottom: 158px;
   right: 90px;
   z-index: 1031;
   flex-direction: row;
@@ -291,6 +291,19 @@ h1, h2, h3, h4, h5, .navbar-brand, .card-title, .offcanvas-title {
 
 [data-theme="dark"] .btn-close {
   filter: invert(1);
+}
+
+.offcanvas-body {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  max-height: calc(100vh - 56px);
+}
+
+#carrito-lista {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .carrito-item {

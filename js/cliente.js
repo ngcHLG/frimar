@@ -18,6 +18,55 @@ async function cargarMonedas() {
   }
   document.getElementById('current-currency-label').textContent = monedaActiva;
   generarBotonesMoneda();
+  inyectarModalCambioMoneda();
+}
+
+function inyectarModalCambioMoneda() {
+  if (document.getElementById('confirmarCambioMonedaModal')) return;
+
+  const modalHTML = `
+    <div class="modal fade" id="confirmarCambioMonedaModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Cambiar moneda</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p>Si cambias de moneda, se vaciará tu carrito actual porque los precios pueden variar. ¿Deseas continuar?</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-accent btn-sm" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-accent btn-sm" id="btn-confirmar-cambio-moneda">Vaciar y cambiar</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+  document.getElementById('btn-confirmar-cambio-moneda').addEventListener('click', function () {
+    const codigoPendiente = window._monedaPendiente;
+    if (!codigoPendiente) return;
+
+    carrito = [];
+    actualizarCarrito();
+
+    monedaActiva = codigoPendiente;
+    localStorage.setItem('guajiro-currency', codigoPendiente);
+    document.getElementById('current-currency-label').textContent = codigoPendiente;
+    generarBotonesMoneda();
+    document.getElementById('moneda-list').classList.remove('show');
+    actualizarRecargoDesdeMoneda();
+
+    if (categoriaActiva === 'combos') {
+      cargarCombosPublicos();
+    } else {
+      renderProductos();
+    }
+
+    bootstrap.Modal.getInstance(document.getElementById('confirmarCambioMonedaModal')).hide();
+    window._monedaPendiente = null;
+  });
 }
 
 function generarBotonesMoneda() {
@@ -31,13 +80,10 @@ function generarBotonesMoneda() {
 function cambiarMoneda(codigo) {
   if (!monedasDisponibles.includes(codigo)) return;
 
-  // Verificar si el carrito tiene productos de otra moneda
   if (carrito.length > 0 && codigo !== monedaActiva) {
-    if (!confirm('Cambiar de moneda vaciará tu carrito actual. ¿Deseas continuar?')) {
-      return;
-    }
-    carrito = [];
-    actualizarCarrito();
+    window._monedaPendiente = codigo;
+    new bootstrap.Modal(document.getElementById('confirmarCambioMonedaModal')).show();
+    return;
   }
 
   monedaActiva = codigo;
@@ -290,7 +336,7 @@ async function verificarHorario() {
   const horaActual = ahora.getHours() + ahora.getMinutes() / 60;
 
   const { data } = await supabaseClient.from('horarios').select('abierto, hora_apertura, hora_cierre').eq('dia_semana', diaSemana).single();
-  let textoHorario = 'Sistema inactivo hoy.';
+  let textoHorario = 'Cerrado por hoy. ¡Te esperamos pronto!';
 
   if (data) {
     if (data.abierto) {
@@ -300,14 +346,16 @@ async function verificarHorario() {
       const [hA, mA] = data.hora_apertura.split(':').map(Number);
       const [hC, mC] = data.hora_cierre.split(':').map(Number);
       horarioAbierto = horaActual >= (hA + mA / 60) && horaActual < (hC + mC / 60);
-      if (!horarioAbierto) textoHorario = `Operaciones documentadas de ${data.hora_apertura.slice(0,5)} a ${data.hora_cierre.slice(0,5)}.`;
+      if (!horarioAbierto) textoHorario = `Estamos fuera de servicio. Nuestro horario es de ${data.hora_apertura.slice(0,5)} a ${data.hora_cierre.slice(0,5)}.`;
     } else {
       horarioAbierto = false;
+      textoHorario = 'Cerrado por hoy. ¡Te esperamos pronto!';
     }
   } else {
     horarioAbierto = false;
+    textoHorario = 'Cerrado por hoy. ¡Te esperamos pronto!';
   }
 
   document.getElementById('horario-aviso').classList.toggle('d-none', horarioAbierto);
   document.getElementById('horario-texto').textContent = textoHorario;
-    }
+}

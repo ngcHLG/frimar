@@ -18,7 +18,7 @@
 
   // Cerrar sesión
   window.cerrarSesion = async function() {
-    await window.comecomeSupabase.auth.signOut();
+    await window.guajiroPC.auth.signOut();
     window.location.href = 'login.html';
   };
 

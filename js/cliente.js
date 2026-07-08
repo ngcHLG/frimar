@@ -19,6 +19,7 @@ async function cargarMonedas() {
   document.getElementById('current-currency-label').textContent = monedaActiva;
   generarBotonesMoneda();
   inyectarModalCambioMoneda();
+  await actualizarMetodosPago();
 }
 
 function inyectarModalCambioMoneda() {
@@ -56,6 +57,7 @@ function inyectarModalCambioMoneda() {
     generarBotonesMoneda();
     document.getElementById('moneda-list').classList.remove('show');
     actualizarRecargoDesdeMoneda();
+    actualizarMetodosPago();
 
     if (categoriaActiva === 'combos') {
       cargarCombosPublicos();
@@ -91,6 +93,7 @@ function cambiarMoneda(codigo) {
   generarBotonesMoneda();
   document.getElementById('moneda-list').classList.remove('show');
   actualizarRecargoDesdeMoneda();
+  actualizarMetodosPago();
   if (categoriaActiva === 'combos') {
     cargarCombosPublicos();
   } else {
@@ -110,9 +113,41 @@ function configurarSelectorMoneda() {
   });
 }
 
+// ─── Métodos de pago según moneda ────────
+async function actualizarMetodosPago() {
+  const { data } = await supabaseClient
+    .from('monedas')
+    .select('metodos_pago')
+    .eq('codigo', monedaActiva)
+    .single();
+
+  const metodos = data?.metodos_pago || ['efectivo', 'transferencia'];
+  const select = document.getElementById('metodo-pago');
+  const opciones = {
+    efectivo: 'Efectivo',
+    transferencia: 'Transferencia'
+  };
+
+  select.innerHTML = '';
+  metodos.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = opciones[m] || m;
+    select.appendChild(opt);
+  });
+
+  // Si solo hay un método, lo seleccionamos automáticamente
+  if (metodos.length === 1) {
+    select.value = metodos[0];
+  }
+  // Actualizar la info del recargo
+  actualizarInfoRecargo();
+}
+
 // ─── Configuración y recargo ────────────
 async function cargarConfiguracion() {
   await actualizarRecargoDesdeMoneda();
+  await actualizarMetodosPago();
 }
 
 async function actualizarRecargoDesdeMoneda() {
@@ -126,8 +161,10 @@ async function actualizarRecargoDesdeMoneda() {
 }
 
 function actualizarInfoRecargo() {
-  const metodo = document.getElementById('metodo-pago').value;
+  const metodo = document.getElementById('metodo-pago')?.value;
   const info = document.getElementById('recargo-info');
+  if (!info || !metodo) return;
+
   if (metodo === 'transferencia' && recargoTransferencia > 0) {
     info.textContent = `Recargo del ${recargoTransferencia}% sobre subtotal en ${monedaActiva}.`;
     info.classList.remove('d-none');
@@ -153,18 +190,38 @@ async function verificarCombosActivos() {
 }
 
 async function cargarRepartosEnvio() {
-  const select = document.getElementById('reparto-select');
+  const datalist = document.getElementById('repartos-list');
   const { data } = await supabaseClient.from('repartos').select('*').eq('activo', true).order('nombre');
-  select.innerHTML = '<option value="">Seleccione zona de envío...</option>';
+  datalist.innerHTML = '';
   if (!data || data.length === 0) return;
+
+  // Guardamos los datos para usar en la selección
+  window._repartosData = data;
   data.forEach(r => {
     const opt = document.createElement('option');
-    opt.value = r.id;
+    opt.value = r.nombre;
     opt.dataset.precio = r.precio;
-    opt.textContent = `${r.nombre} — +${parseFloat(r.precio).toFixed(2)} ${monedaActiva}`;
-    select.appendChild(opt);
+    opt.dataset.id = r.id;
+    datalist.appendChild(opt);
   });
 }
+
+// Función llamada cuando se selecciona un reparto del input
+window.seleccionarReparto = function(nombreReparto) {
+  const reparto = window._repartosData?.find(r => r.nombre === nombreReparto);
+  if (reparto) {
+    document.getElementById('reparto-input').value = reparto.nombre;
+    document.getElementById('reparto-precio').textContent = `Envío: +${parseFloat(reparto.precio).toFixed(2)} CUP`;
+    // Guardamos el precio seleccionado en un atributo data del input para usarlo en actualizarCarrito
+    document.getElementById('reparto-input').dataset.precio = reparto.precio;
+    document.getElementById('reparto-input').dataset.id = reparto.id;
+  } else {
+    document.getElementById('reparto-precio').textContent = '';
+    document.getElementById('reparto-input').dataset.precio = '';
+    document.getElementById('reparto-input').dataset.id = '';
+  }
+  actualizarCarrito();
+};
 
 // ─── Renderizado ─────────────────────────
 function renderCategorias() {
@@ -357,4 +414,4 @@ async function verificarHorario() {
 
   document.getElementById('horario-aviso').classList.toggle('d-none', horarioAbierto);
   document.getElementById('horario-texto').textContent = textoHorario;
-}
+  }

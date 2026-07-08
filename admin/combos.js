@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function cargarProductosDisponibles() {
-  const { data } = await window.comecomeSupabase
+  const { data } = await window.guajiroPC
     .from('productos')
     .select('id, nombre, precio')
     .eq('activo', true)
@@ -40,7 +40,7 @@ function validarCantidad(input) {
 }
 
 async function cargarCombos() {
-  const { data: combos, error } = await window.comecomeSupabase
+  const { data: combos, error } = await window.guajiroPC
     .from('combos')
     .select('*')
     .order('nombre');
@@ -53,7 +53,7 @@ async function cargarCombos() {
   container.innerHTML = '';
 
   for (const combo of combos) {
-    const { data: items } = await window.comecomeSupabase
+    const { data: items } = await window.guajiroPC
       .from('combo_items')
       .select('*, productos(nombre, precio)')
       .eq('combo_id', combo.id);
@@ -109,14 +109,14 @@ function abrirModalNuevo() {
 }
 
 async function abrirModalEditar(id) {
-  const { data: combo, error } = await window.comecomeSupabase
+  const { data: combo, error } = await window.guajiroPC
     .from('combos')
     .select('*')
     .eq('id', id)
     .single();
   if (error || !combo) return;
 
-  const { data: items } = await window.comecomeSupabase
+  const { data: items } = await window.guajiroPC
     .from('combo_items')
     .select('*')
     .eq('combo_id', id);
@@ -184,20 +184,20 @@ async function guardarCombo() {
   };
 
   if (id) {
-    const { error: errCombo } = await window.comecomeSupabase
+    const { error: errCombo } = await window.guajiroPC
       .from('combos')
       .update(comboData)
       .eq('id', id);
     if (errCombo) { mostrarMensaje('Error al actualizar combo'); return; }
 
-    await window.comecomeSupabase.from('combo_items').delete().eq('combo_id', id);
+    await window.guajiroPC.from('combo_items').delete().eq('combo_id', id);
     if (items.length > 0) {
       const itemsConCombo = items.map(it => ({ combo_id: id, ...it }));
-      const { error: errItems } = await window.comecomeSupabase.from('combo_items').insert(itemsConCombo);
+      const { error: errItems } = await window.guajiroPC.from('combo_items').insert(itemsConCombo);
       if (errItems) { mostrarMensaje('Error al guardar productos del combo'); return; }
     }
   } else {
-    const { data: nuevo, error: errCombo } = await window.comecomeSupabase
+    const { data: nuevo, error: errCombo } = await window.guajiroPC
       .from('combos')
       .insert(comboData)
       .select()
@@ -206,7 +206,7 @@ async function guardarCombo() {
 
     if (items.length > 0) {
       const itemsConCombo = items.map(it => ({ combo_id: nuevo.id, ...it }));
-      const { error: errItems } = await window.comecomeSupabase.from('combo_items').insert(itemsConCombo);
+      const { error: errItems } = await window.guajiroPC.from('combo_items').insert(itemsConCombo);
       if (errItems) { mostrarMensaje('Error al guardar productos del combo'); return; }
     }
   }
@@ -216,13 +216,13 @@ async function guardarCombo() {
 }
 
 async function toggleVisibilidadCombo(id) {
-  const { data: combo } = await window.comecomeSupabase
+  const { data: combo } = await window.guajiroPC
     .from('combos')
     .select('activo')
     .eq('id', id)
     .single();
   if (!combo) return;
-  await window.comecomeSupabase
+  await window.guajiroPC
     .from('combos')
     .update({ activo: !combo.activo })
     .eq('id', id);
@@ -230,7 +230,7 @@ async function toggleVisibilidadCombo(id) {
 }
 
 async function eliminarCombo(id) {
-  const { error } = await window.comecomeSupabase
+  const { error } = await window.guajiroPC
     .from('combos')
     .delete()
     .eq('id', id);

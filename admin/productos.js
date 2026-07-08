@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function cargarCategoriasEnSelect() {
-  const { data } = await window.comecomeSupabase
+  const { data } = await window.guajiroPC
     .from('categorias')
     .select('id, nombre')
     .order('nombre');
@@ -43,7 +43,7 @@ function previsualizarFoto(e) {
 }
 
 async function cargarProductos() {
-  const { data, error } = await window.comecomeSupabase
+  const { data, error } = await window.guajiroPC
     .from('productos')
     .select('*, categorias(nombre)')
     .order('nombre');
@@ -95,7 +95,7 @@ function abrirModalNuevo() {
 }
 
 async function abrirModalEditar(id) {
-  const { data, error } = await window.comecomeSupabase
+  const { data, error } = await window.guajiroPC
     .from('productos')
     .select('*')
     .eq('id', id)
@@ -141,14 +141,14 @@ async function guardarProducto() {
 
   if (archivoFoto) {
     const nombreArchivo = `producto_${Date.now()}.${archivoFoto.name.split('.').pop()}`;
-    const { data: uploadData, error: uploadError } = await window.comecomeSupabase
+    const { data: uploadData, error: uploadError } = await window.guajiroPC
       .storage.from('productos')
       .upload(nombreArchivo, archivoFoto, { upsert: true });
     if (uploadError) {
       mostrarMensaje('Error al subir foto: ' + uploadError.message);
       return;
     }
-    const { data: urlData } = window.comecomeSupabase
+    const { data: urlData } = window.guajiroPC
       .storage.from('productos')
       .getPublicUrl(nombreArchivo);
     foto_url = urlData.publicUrl;
@@ -157,13 +157,13 @@ async function guardarProducto() {
   const datosProducto = { nombre, descripcion, precio, categoria_id, permite_extras, foto_url };
 
   if (id) {
-    const { error } = await window.comecomeSupabase
+    const { error } = await window.guajiroPC
       .from('productos')
       .update(datosProducto)
       .eq('id', id);
     if (error) { mostrarMensaje('Error: ' + error.message); return; }
   } else {
-    const { error } = await window.comecomeSupabase
+    const { error } = await window.guajiroPC
       .from('productos')
       .insert([{ ...datosProducto, activo: true }]);
     if (error) { mostrarMensaje('Error: ' + error.message); return; }
@@ -174,13 +174,13 @@ async function guardarProducto() {
 }
 
 async function toggleVisibilidad(id) {
-  const { data } = await window.comecomeSupabase
+  const { data } = await window.guajiroPC
     .from('productos')
     .select('activo')
     .eq('id', id)
     .single();
   if (!data) return;
-  await window.comecomeSupabase
+  await window.guajiroPC
     .from('productos')
     .update({ activo: !data.activo })
     .eq('id', id);
@@ -188,7 +188,7 @@ async function toggleVisibilidad(id) {
 }
 
 async function eliminarProducto(id) {
-  const { error } = await window.comecomeSupabase
+  const { error } = await window.guajiroPC
     .from('productos')
     .delete()
     .eq('id', id);

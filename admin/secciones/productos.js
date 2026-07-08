@@ -10,7 +10,8 @@ window.productos = {
     document.getElementById('btn-prod-guardar').addEventListener('click', guardar);
     document.getElementById('prod-foto').addEventListener('change', previewFoto);
   },
-  abrirNuevo: function() {
+  abrirNuevo: async function() {
+    await llenarMonedasCheckboxes({});
     document.getElementById('prod-id').value = '';
     document.getElementById('prod-nombre').value = '';
     document.getElementById('prod-descripcion').value = '';
@@ -33,8 +34,14 @@ function modalHTML() {
           <input type="hidden" id="prod-id">
           <div class="mb-3"><label class="form-label">Nombre</label><input type="text" class="form-control" id="prod-nombre" required></div>
           <div class="mb-3"><label class="form-label">Descripción</label><textarea class="form-control" id="prod-descripcion" rows="2"></textarea></div>
-          <div class="mb-3"><label class="form-label">Precio (CUP)</label><input type="number" step="0.01" min="0" class="form-control" id="prod-precio" required></div>
+          <div class="mb-3"><label class="form-label">Precio base (CUP)</label><input type="number" step="0.01" min="0" class="form-control" id="prod-precio" required></div>
           <div class="mb-3"><label class="form-label">Categoría</label><select class="form-select" id="prod-categoria"><option value="">Sin categoría</option></select></div>
+          <div class="mb-3">
+            <label class="form-label">Precios por moneda</label>
+            <div id="monedas-precios-container">
+              <!-- Se llenan dinámicamente -->
+            </div>
+          </div>
           <div class="mb-3"><label class="form-label">Foto</label><input type="file" class="form-control" id="prod-foto" accept="image/*"><img id="preview-foto" src="" class="mt-2 d-none" style="width:100px;height:100px;object-fit:cover;border-radius:4px;"></div>
           <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="prod-extras" checked><label class="form-check-label">Permitir extras</label></div>
         </div>
@@ -46,15 +53,39 @@ function modalHTML() {
     </div>`;
 }
 
-function previewFoto(e) {
-  const file = e.target.files[0];
-  const preview = document.getElementById('preview-foto');
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = ev => { preview.src = ev.target.result; preview.classList.remove('d-none'); };
-    reader.readAsDataURL(file);
-  } else { preview.classList.add('d-none'); }
+async function llenarMonedasCheckboxes(preciosExistentes = {}) {
+  const container = document.getElementById('monedas-precios-container');
+  if (!container) return;
+
+  // Obtener monedas activas desde la tabla 'monedas'
+  const { data: monedas, error } = await window.guajiroPC.from('monedas').select('*').eq('activo', true).order('codigo');
+  if (error || !monedas) {
+    container.innerHTML = '<p class="text-muted">No hay monedas disponibles.</p>';
+    return;
+  }
+
+  container.innerHTML = monedas.map(m => {
+    const checked = preciosExistentes.hasOwnProperty(m.codigo) ? 'checked' : '';
+    const precioValor = preciosExistentes[m.codigo] || '';
+    return `
+      <div class="form-check form-check-inline mb-2">
+        <input class="form-check-input moneda-check" type="checkbox" id="moneda-${m.codigo}" value="${m.codigo}" ${checked} onchange="togglePrecioMoneda('${m.codigo}')">
+        <label class="form-check-label" for="moneda-${m.codigo}">${m.codigo} - ${m.nombre}</label>
+        <input type="number" step="0.01" min="0" class="form-control form-control-sm d-inline-block ms-2" id="precio-${m.codigo}" value="${precioValor}" style="width: 100px;" ${checked ? '' : 'disabled'}>
+      </div>
+    `;
+  }).join('');
 }
+
+// Función global para alternar el campo de precio
+window.togglePrecioMoneda = function(codigo) {
+  const checkbox = document.getElementById(`moneda-${codigo}`);
+  const precioInput = document.getElementById(`precio-${codigo}`);
+  if (checkbox && precioInput) {
+    precioInput.disabled = !checkbox.checked;
+    if (!checkbox.checked) precioInput.value = '';
+  }
+};
 
 async function cargarProductos() {
   const { data } = await window.guajiroPC.from('productos').select('*, categorias(nombre)').order('nombre');
@@ -91,6 +122,16 @@ async function cargarCategoriasEnSelect() {
   });
 }
 
+function previewFoto(e) {
+  const file = e.target.files[0];
+  const preview = document.getElementById('preview-foto');
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = ev => { preview.src = ev.target.result; preview.classList.remove('d-none'); };
+    reader.readAsDataURL(file);
+  } else { preview.classList.add('d-none'); }
+}
+
 async function guardar() {
   const id = document.getElementById('prod-id').value;
   const nombre = document.getElementById('prod-nombre').value.trim();
@@ -99,7 +140,19 @@ async function guardar() {
   const categoria_id = document.getElementById('prod-categoria').value || null;
   const permite_extras = document.getElementById('prod-extras').checked;
   const archivo = document.getElementById('prod-foto').files[0];
-  if (!nombre || isNaN(precio)) { alert('Nombre y precio requeridos'); return; }
+
+  if (!nombre || isNaN(precio)) { alert('Nombre y precio base requeridos'); return; }
+
+  // Construir objeto de precios por moneda
+  const precios = {};
+  document.querySelectorAll('.moneda-check:checked').forEach(cb => {
+    const moneda = cb.value;
+    const inputPrecio = document.getElementById(`precio-${moneda}`);
+    if (inputPrecio && inputPrecio.value) {
+      precios[moneda] = parseFloat(inputPrecio.value);
+    }
+  });
+
   let foto_url = null;
   if (archivo) {
     const nombreArchivo = `producto_${Date.now()}.${archivo.name.split('.').pop()}`;
@@ -108,32 +161,46 @@ async function guardar() {
       const { data: urlData } = window.guajiroPC.storage.from('productos').getPublicUrl(nombreArchivo);
       foto_url = urlData.publicUrl;
     }
-  } else {
+  } else if (id) {
     const { data: old } = await window.guajiroPC.from('productos').select('foto_url').eq('id', id).single();
     foto_url = old?.foto_url || null;
   }
-  const datos = { nombre, descripcion, precio, categoria_id, permite_extras, foto_url };
+
+  const datos = { nombre, descripcion, precio, categoria_id, permite_extras, foto_url, precios };
+
   if (id) {
-    await window.guajiroPC.from('productos').update(datos).eq('id', id);
+    const { error } = await window.guajiroPC.from('productos').update(datos).eq('id', id);
+    if (error) { alert('Error al actualizar: ' + error.message); return; }
   } else {
-    await window.guajiroPC.from('productos').insert([{ ...datos, activo: true }]);
+    const { error } = await window.guajiroPC.from('productos').insert([{ ...datos, activo: true }]);
+    if (error) { alert('Error al crear: ' + error.message); return; }
   }
+
   bootstrap.Modal.getInstance(document.getElementById('productoModal')).hide();
   cargarProductos();
 }
 
 window.productos.editar = async function(id) {
-  const { data } = await window.guajiroPC.from('productos').select('*').eq('id', id).single();
-  if (!data) return;
+  const { data, error } = await window.guajiroPC.from('productos').select('*').eq('id', id).single();
+  if (error || !data) return;
+
   document.getElementById('prod-id').value = data.id;
   document.getElementById('prod-nombre').value = data.nombre;
   document.getElementById('prod-descripcion').value = data.descripcion || '';
-  document.getElementById('prod-precio').value = data.precio;
+  document.getElementById('prod-precio').value = data.precio || '';
   document.getElementById('prod-categoria').value = data.categoria_id || '';
   document.getElementById('prod-extras').checked = data.permite_extras;
+
+  await llenarMonedasCheckboxes(data.precios || {});
+
   document.getElementById('prod-foto').value = '';
   const preview = document.getElementById('preview-foto');
-  if (data.foto_url) { preview.src = data.foto_url; preview.classList.remove('d-none'); } else { preview.classList.add('d-none'); }
+  if (data.foto_url) {
+    preview.src = data.foto_url;
+    preview.classList.remove('d-none');
+  } else {
+    preview.classList.add('d-none');
+  }
   document.getElementById('prod-modal-titulo').textContent = 'Editar producto';
   new bootstrap.Modal(document.getElementById('productoModal')).show();
 };
@@ -145,6 +212,8 @@ window.productos.toggle = async function(id) {
 };
 
 window.productos.eliminar = async function(id) {
-  await window.guajiroPC.from('productos').delete().eq('id', id);
+  if (!confirm('¿Eliminar este producto?')) return;
+  const { error } = await window.guajiroPC.from('productos').delete().eq('id', id);
+  if (error) { alert('Error al eliminar: ' + error.message); return; }
   cargarProductos();
 };

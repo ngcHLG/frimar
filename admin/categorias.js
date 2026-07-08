@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function cargarCategorias() {
-  const { data, error } = await window.comecomeSupabase
+  const { data, error } = await window.guajiroPC
     .from('categorias')
     .select('*')
     .order('nombre', { ascending: true });
@@ -41,7 +41,7 @@ function abrirModalNuevo() {
 }
 
 async function abrirModalEditar(id) {
-  const { data, error } = await window.comecomeSupabase
+  const { data, error } = await window.guajiroPC
     .from('categorias')
     .select('*')
     .eq('id', id)
@@ -67,7 +67,7 @@ async function guardarCategoria() {
   }
 
   if (id) {
-    const { error } = await window.comecomeSupabase
+    const { error } = await window.guajiroPC
       .from('categorias')
       .update({ nombre })
       .eq('id', id);
@@ -76,7 +76,7 @@ async function guardarCategoria() {
       return;
     }
   } else {
-    const { error } = await window.comecomeSupabase
+    const { error } = await window.guajiroPC
       .from('categorias')
       .insert([{ nombre }]);
     if (error) {
@@ -90,7 +90,7 @@ async function guardarCategoria() {
 }
 
 async function eliminarCategoria(id) {
-  const { error } = await window.comecomeSupabase
+  const { error } = await window.guajiroPC
     .from('categorias')
     .delete()
     .eq('id', id);

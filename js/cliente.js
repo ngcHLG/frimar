@@ -184,30 +184,26 @@ function renderProductos() {
 
 // ─── Combos con monedas ──────────────────
 async function obtenerPrecioCombo(comboId) {
-  // Obtener combo
   const { data: combo, error: errCombo } = await supabaseClient
     .from('combos').select('*').eq('id', comboId).single();
   if (errCombo || !combo) return null;
 
-  // Obtener items con precios de los productos
   const { data: items, error: errItems } = await supabaseClient
     .from('combo_items')
     .select('*, productos(nombre, precios)')
     .eq('combo_id', comboId);
   if (errItems || !items || items.length === 0) return null;
 
-  // Calcular subtotal original en la moneda activa
   let originalTotal = 0;
   for (const item of items) {
     const precioProd = obtenerPrecioNumerico(item.productos);
-    if (precioProd === null) return null;   // producto sin precio en esta moneda
+    if (precioProd === null) return null;
     originalTotal += precioProd * item.cantidad;
   }
 
-  // Aplicar descuento del combo según la moneda activa
   const precios = combo.precios || {};
   const montos = precios.montos || {};
-  if (!montos[monedaActiva] && montos[monedaActiva] !== 0) return null; // sin descuento para esta moneda
+  if (!montos[monedaActiva] && montos[monedaActiva] !== 0) return null;
 
   let finalPrice;
   if (precios.tipo === 'porcentaje') {
@@ -215,22 +211,16 @@ async function obtenerPrecioCombo(comboId) {
   } else if (precios.tipo === 'fijo') {
     finalPrice = montos[monedaActiva];
   } else {
-    return null; // tipo desconocido
+    return null;
   }
 
-  return {
-    combo,
-    items,
-    originalTotal,
-    finalPrice
-  };
+  return { combo, items, originalTotal, finalPrice };
 }
 
 async function cargarCombosPublicos() {
   const container = document.getElementById('productos-container');
   container.innerHTML = '<div class="col"><div class="skeleton skeleton-card"></div></div><div class="col"><div class="skeleton skeleton-card"></div></div>';
 
-  // Obtener todos los combos activos
   const { data: combos, error } = await supabaseClient.from('combos').select('*').eq('activo', true).order('nombre');
   if (error || !combos || combos.length === 0) {
     container.innerHTML = '<p class="text-muted">No existen lotes documentados.</p>';
@@ -240,12 +230,11 @@ async function cargarCombosPublicos() {
   let html = '';
   for (const combo of combos) {
     const precioData = await obtenerPrecioCombo(combo.id);
-    if (!precioData) continue; // combo no disponible en esta moneda
+    if (!precioData) continue;
 
     const { items, originalTotal, finalPrice } = precioData;
     const listaProductos = items.map(i => `${i.cantidad}x ${i.productos.nombre}`).join(', ');
 
-    // Badge de descuento
     const precios = combo.precios || {};
     const montos = precios.montos || {};
     let badgeTexto = '';
@@ -280,11 +269,7 @@ async function cargarCombosPublicos() {
       </div>`;
   }
 
-  if (html === '') {
-    container.innerHTML = '<p class="text-muted">No hay lotes disponibles en esta moneda.</p>';
-  } else {
-    container.innerHTML = html;
-  }
+  container.innerHTML = html === '' ? '<p class="text-muted">No hay lotes disponibles en esta moneda.</p>' : html;
 }
 
 // ─── Horarios ────────────────────────────
@@ -314,4 +299,4 @@ async function verificarHorario() {
 
   document.getElementById('horario-aviso').classList.toggle('d-none', horarioAbierto);
   document.getElementById('horario-texto').textContent = textoHorario;
-               }
+}

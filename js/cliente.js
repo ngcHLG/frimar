@@ -30,6 +30,16 @@ function generarBotonesMoneda() {
 
 function cambiarMoneda(codigo) {
   if (!monedasDisponibles.includes(codigo)) return;
+
+  // Verificar si el carrito tiene productos de otra moneda
+  if (carrito.length > 0 && codigo !== monedaActiva) {
+    if (!confirm('Cambiar de moneda vaciará tu carrito actual. ¿Deseas continuar?')) {
+      return;
+    }
+    carrito = [];
+    actualizarCarrito();
+  }
+
   monedaActiva = codigo;
   localStorage.setItem('guajiro-currency', codigo);
   document.getElementById('current-currency-label').textContent = codigo;
@@ -300,4 +310,4 @@ async function verificarHorario() {
 
   document.getElementById('horario-aviso').classList.toggle('d-none', horarioAbierto);
   document.getElementById('horario-texto').textContent = textoHorario;
-  }
+    }

@@ -2,7 +2,7 @@ let pedidosData = [];
 let seleccionados = new Set();
 
 async function cargarPedidos() {
-  const { data, error } = await window.comecomeSupabase
+  const { data, error } = await window.guajiroPC
     .from('pedidos')
     .select('*')
     .order('created_at', { ascending: false });
@@ -146,7 +146,7 @@ async function eliminarSeleccionados() {
   document.getElementById('btn-confirmar-eliminar').onclick = async () => {
     modal.hide();
     const ids = [...seleccionados];
-    const { error } = await window.comecomeSupabase
+    const { error } = await window.guajiroPC
       .from('pedidos')
       .delete()
       .in('id', ids);
@@ -170,7 +170,7 @@ async function cambiarEstado(id, estadoActual) {
   const nuevoEstado = siguiente[estadoActual];
   if (!nuevoEstado) return;
 
-  const { error } = await window.comecomeSupabase
+  const { error } = await window.guajiroPC
     .from('pedidos')
     .update({ estado: nuevoEstado })
     .eq('id', id);

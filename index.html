@@ -17,7 +17,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
   
   <style>
-    /* Definición de Paleta Dinámica */
     :root {
       --c-01: #0D111B;
       --c-02: #16202D;
@@ -71,11 +70,9 @@
 
     ::selection { background: var(--accent-btn); color: var(--accent-text); }
 
-    /* Navegación Superior */
     .navbar { background-color: var(--nav-bg) !important; border-bottom: 1px solid var(--border-color); }
     .navbar-brand { color: var(--nav-text) !important; font-size: 1.5rem; letter-spacing: 1px; text-transform: uppercase; }
 
-    /* Barra de categorías */
     .categorias-nav {
       background-color: var(--bg-surface); padding: 0.8rem 0;
       position: sticky; top: 56px; z-index: 1020;
@@ -97,24 +94,14 @@
       border-color: var(--accent-btn);
     }
 
-    /* Tarjetas de Producto */
     .card-producto {
       background-color: var(--bg-surface);
       border: 1px solid var(--border-color);
       border-radius: 8px; overflow: hidden;
       box-shadow: 0 4px 6px rgba(0,0,0,0.05);
     }
-    .producto-media {
-      background-color: var(--bg-surface);
-      border-bottom: 1px solid var(--border-color);
-    }
-    /* Estructura 4:3 para el catálogo */
-    .card-producto .card-img-top { 
-      aspect-ratio: 4/3; 
-      object-fit: contain; 
-      width: 100%; 
-      padding: 1rem;
-    }
+    .producto-media { background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color); }
+    .card-producto .card-img-top { aspect-ratio: 4/3; object-fit: contain; width: 100%; padding: 1rem; }
     .producto-sin-foto {
       width: 100%; aspect-ratio: 4/3; background-color: rgba(138, 141, 145, 0.1);
       color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-size: 3rem;
@@ -130,7 +117,6 @@
     .btn-accent:hover { background-color: var(--accent-hover); color: var(--accent-text); }
     .btn-accent:disabled { opacity: 0.5; }
 
-    /* Entradas numéricas */
     .qty-input {
       background-color: var(--bg-body); color: var(--text-main);
       border: 1px solid var(--border-color);
@@ -138,7 +124,6 @@
     }
     .qty-input:focus { border-color: var(--accent-btn); outline: none; box-shadow: 0 0 0 0.2rem rgba(167, 214, 232, 0.25); }
 
-    /* Botones Flotantes (FAB) */
     .fab-container {
       position: fixed; bottom: 20px; right: 20px;
       display: flex; flex-direction: column; gap: 10px; z-index: 1050;
@@ -160,10 +145,35 @@
       border: 2px solid var(--bg-body);
     }
 
-    /* Offcanvas (Carrito) */
+    .moneda-list {
+      display: none;
+      position: fixed;
+      bottom: 200px;
+      right: 20px;
+      z-index: 1051;
+      flex-direction: row;
+      gap: 8px;
+      overflow-x: auto;
+      max-width: calc(100vw - 40px);
+      padding: 4px;
+      scrollbar-width: thin;
+      white-space: nowrap;
+    }
+    .moneda-list.show { display: flex; }
+    .moneda-chip {
+      width: 44px; height: 44px; border-radius: 50%;
+      background-color: var(--accent-btn); color: var(--accent-text);
+      border: none; font-weight: 600; font-size: 0.8rem;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      flex-shrink: 0; transition: transform 0.15s;
+      text-transform: uppercase;
+    }
+    .moneda-chip:hover { transform: scale(1.1); background-color: var(--accent-hover); }
+    .moneda-chip.active { border: 2px solid var(--c-01); }
+
     .offcanvas { background-color: var(--bg-surface); color: var(--text-main); border-left: 1px solid var(--border-color); }
     .offcanvas-header { border-bottom: 1px solid var(--border-color); }
-    .btn-close-custom { filter: invert(var(--invert-icon, 0)); }
     [data-theme="dark"] .btn-close { filter: invert(1); }
 
     .carrito-item { background-color: var(--bg-surface); border-color: var(--border-color); color: var(--text-main); }
@@ -177,7 +187,6 @@
       border-color: var(--accent-btn); box-shadow: none;
     }
 
-    /* Modales y Toasts */
     .modal-content { background-color: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border-color); }
     .modal-header { border-bottom: 1px solid var(--border-color); }
     .modal-footer { border-top: 1px solid var(--border-color); }
@@ -190,7 +199,6 @@
       border-radius: 4px; padding: 0.3rem 0.7rem; font-size: 0.75rem;
     }
 
-    /* Componentes Skeleton */
     .skeleton {
       background: linear-gradient(90deg, var(--border-color) 25%, var(--bg-body) 50%, var(--border-color) 75%);
       background-size: 200% 100%; animation: skeleton-pulse 1.5s infinite; border-radius: 4px;
@@ -208,7 +216,6 @@
       <a class="navbar-brand d-flex align-items-center m-0" href="#">
         <img src="icon_regular_small.png" alt="GUAJIRO" style="height: 30px; width: 30px; object-fit: contain; margin-right: 0.5rem;">
         GUAJIRO
-      </a>
       </a>
     </div>
   </nav>
@@ -240,8 +247,11 @@
     </div>
   </main>
 
-  <!-- Elementos Flotantes (FAB) -->
+  <!-- FABs -->
   <div class="fab-container">
+    <button id="btn-currency-toggle" class="fab-btn" aria-label="Cambiar moneda" title="Cambiar moneda">
+      <span id="current-currency-label" style="font-size: 0.9rem; font-weight: bold;">CUP</span>
+    </button>
     <button id="btn-theme-toggle" class="fab-btn" aria-label="Alternar Tema">
       <i class="bi bi-moon-stars-fill" id="theme-icon"></i>
     </button>
@@ -250,6 +260,9 @@
       <span id="cart-badge">0</span>
     </button>
   </div>
+
+  <!-- Lista de monedas -->
+  <div class="moneda-list" id="moneda-list"></div>
 
   <!-- Offcanvas Carrito -->
   <div class="offcanvas offcanvas-end" tabindex="-1" id="carritoOffcanvas">
@@ -271,7 +284,7 @@
         </div>
 
         <div class="mb-3">
-          <label class="form-label fw-bold">Gestión de Reparto</label>
+          <label class="form-label fw-bold">Reparto</label>
           <select id="reparto-select" class="form-select" onchange="actualizarCarrito()">
             <option value="">Seleccione zona de envío...</option>
           </select>
@@ -280,19 +293,19 @@
         <div class="bg-body p-3 rounded border">
           <div class="d-flex justify-content-between text-muted mb-1">
             <span>Subtotal:</span>
-            <span><span id="subtotal-carrito">0.00</span> CUP</span>
+            <span><span id="subtotal-carrito">0.00</span> <span id="subtotal-moneda">CUP</span></span>
           </div>
           <div id="recargo-desglose" class="d-flex justify-content-between text-muted mb-1 d-none">
-            <span>Recargo bancario:</span>
-            <span><span id="recargo-aplicado">0.00</span> CUP</span>
+            <span>Recargo:</span>
+            <span><span id="recargo-aplicado">0.00</span> <span id="recargo-moneda">CUP</span></span>
           </div>
           <div id="envio-desglose" class="d-flex justify-content-between text-muted mb-2 d-none">
-            <span>Tarifa de envío:</span>
-            <span><span id="envio-aplicado">0.00</span> CUP</span>
+            <span>Envío:</span>
+            <span><span id="envio-aplicado">0.00</span> <span id="envio-moneda">CUP</span></span>
           </div>
           <div class="d-flex justify-content-between fw-bold fs-5 border-top border-secondary pt-2 mt-2">
             <span>Total:</span>
-            <span id="total-pedido">0.00 CUP</span>
+            <span><span id="total-pedido">0.00</span> <span id="total-moneda">CUP</span></span>
           </div>
         </div>
         
@@ -378,9 +391,10 @@
     let checkoutModalInstance = null;
     let horarioAbierto = true;
     let recargoTransferencia = 0;
+    let monedaActiva = 'CUP';
+    let monedasDisponibles = [];
 
     document.addEventListener('DOMContentLoaded', async () => {
-      // Inicialización de Tema Dinámico
       const btnThemeToggle = document.getElementById('btn-theme-toggle');
       const themeIcon = document.getElementById('theme-icon');
       
@@ -395,6 +409,7 @@
       const modalEl = document.getElementById('checkoutModal');
       if (modalEl) checkoutModalInstance = new bootstrap.Modal(modalEl);
 
+      await cargarMonedas();
       await cargarConfiguracion();
       await cargarCategorias();
       await cargarProductos();
@@ -409,25 +424,85 @@
         actualizarCarrito();
       });
 
+      configurarSelectorMoneda();
+
       setInterval(async () => {
         await verificarHorario();
         categoriaActiva === 'combos' ? cargarCombosPublicos() : renderProductos();
       }, 60000);
     });
 
-    async function cargarConfiguracion() {
-      const { data } = await supabaseClient.from('configuracion').select('recargo_transferencia').single();
-      if (data) {
-        recargoTransferencia = parseFloat(data.recargo_transferencia) || 0;
-        actualizarInfoRecargo();
+    async function cargarMonedas() {
+      const { data } = await supabaseClient.from('monedas').select('codigo').eq('activo', true).order('codigo');
+      if (data && data.length > 0) {
+        monedasDisponibles = data.map(m => m.codigo);
+      } else {
+        monedasDisponibles = ['CUP'];
       }
+      const savedCurrency = localStorage.getItem('guajiro-currency');
+      if (savedCurrency && monedasDisponibles.includes(savedCurrency)) {
+        monedaActiva = savedCurrency;
+      } else {
+        monedaActiva = monedasDisponibles[0];
+        localStorage.setItem('guajiro-currency', monedaActiva);
+      }
+      document.getElementById('current-currency-label').textContent = monedaActiva;
+      generarBotonesMoneda();
+    }
+
+    function generarBotonesMoneda() {
+      const container = document.getElementById('moneda-list');
+      container.innerHTML = monedasDisponibles.map(cod => `
+        <button class="moneda-chip ${cod === monedaActiva ? 'active' : ''}" onclick="cambiarMoneda('${cod}')">${cod}</button>
+      `).join('');
+    }
+
+    window.cambiarMoneda = function(codigo) {
+      if (!monedasDisponibles.includes(codigo)) return;
+      monedaActiva = codigo;
+      localStorage.setItem('guajiro-currency', codigo);
+      document.getElementById('current-currency-label').textContent = codigo;
+      generarBotonesMoneda();
+      document.getElementById('moneda-list').classList.remove('show');
+      actualizarRecargoDesdeMoneda();
+      if (categoriaActiva === 'combos') {
+        cargarCombosPublicos();
+      } else {
+        renderProductos();
+      }
+      actualizarCarrito();
+    };
+
+    function configurarSelectorMoneda() {
+      const toggleBtn = document.getElementById('btn-currency-toggle');
+      const list = document.getElementById('moneda-list');
+      toggleBtn.addEventListener('click', () => list.classList.toggle('show'));
+      document.addEventListener('click', (e) => {
+        if (!toggleBtn.contains(e.target) && !list.contains(e.target)) {
+          list.classList.remove('show');
+        }
+      });
+    }
+
+    async function cargarConfiguracion() {
+      await actualizarRecargoDesdeMoneda();
+    }
+
+    async function actualizarRecargoDesdeMoneda() {
+      const { data } = await supabaseClient
+        .from('monedas')
+        .select('recargo_transferencia')
+        .eq('codigo', monedaActiva)
+        .single();
+      recargoTransferencia = (data && !isNaN(data.recargo_transferencia)) ? parseFloat(data.recargo_transferencia) : 0;
+      actualizarInfoRecargo();
     }
 
     function actualizarInfoRecargo() {
       const metodo = document.getElementById('metodo-pago').value;
       const info = document.getElementById('recargo-info');
       if (metodo === 'transferencia' && recargoTransferencia > 0) {
-        info.textContent = `Aplica recargo del ${recargoTransferencia}% al subtotal.`;
+        info.textContent = `Recargo del ${recargoTransferencia}% sobre subtotal en ${monedaActiva}.`;
         info.classList.remove('d-none');
       } else {
         info.classList.add('d-none');
@@ -451,15 +526,14 @@
 
     async function cargarRepartosEnvio() {
       const select = document.getElementById('reparto-select');
-      const { data, error } = await supabaseClient.from('repartos').select('*').eq('activo', true).order('nombre');
+      const { data } = await supabaseClient.from('repartos').select('*').eq('activo', true).order('nombre');
       select.innerHTML = '<option value="">Seleccione zona de envío...</option>';
-      if (error || !data || data.length === 0) return;
-      
+      if (!data || data.length === 0) return;
       data.forEach(r => {
         const opt = document.createElement('option');
         opt.value = r.id;
         opt.dataset.precio = r.precio;
-        opt.textContent = `${r.nombre} (${r.distancia}) — Tarifa: ${parseFloat(r.precio).toFixed(2)} CUP`;
+        opt.textContent = `${r.nombre} — +${parseFloat(r.precio).toFixed(2)} ${monedaActiva}`;
         select.appendChild(opt);
       });
     }
@@ -467,12 +541,10 @@
     function renderCategorias() {
       const container = document.getElementById('categorias-container');
       let html = `<button class="btn-categoria active" onclick="filtrarPorCategoria('todas', this)">Inventario Completo</button>`;
-      
       if (hayCombosActivos) {
         html += `<button class="btn-categoria" onclick="filtrarPorCategoria('combos', this)">Lotes (Combos)</button>`;
       }
-      
-      const categoriasConProductos = todasCategorias.filter(cat => todosProductos.some(prod => prod.categoria_id === cat.id));
+      const categoriasConProductos = todasCategorias.filter(cat => todosProductos.some(prod => prod.categoria_id === cat.id && obtenerPrecioNumerico(prod) > 0));
       categoriasConProductos.forEach(cat => {
         html += `<button class="btn-categoria" onclick="filtrarPorCategoria('${cat.id}', this)">${cat.nombre}</button>`;
       });
@@ -486,9 +558,27 @@
       catId === 'combos' ? cargarCombosPublicos() : renderProductos();
     }
 
+    function obtenerPrecioNumerico(producto) {
+      const precios = producto.precios || {};
+      if (precios[monedaActiva] !== undefined && precios[monedaActiva] !== null) {
+        const val = parseFloat(precios[monedaActiva]);
+        return (!isNaN(val) && val > 0) ? val : null;
+      }
+      // Si no hay precio base (eliminado), devolvemos null
+      return null;
+    }
+
+    function obtenerPrecioProducto(producto) {
+      const precio = obtenerPrecioNumerico(producto);
+      return precio ? precio.toFixed(2) + ' ' + monedaActiva : 'N/D';
+    }
+
     function renderProductos() {
       const container = document.getElementById('productos-container');
-      const productosFiltrados = categoriaActiva !== 'todas' ? todosProductos.filter(p => p.categoria_id === categoriaActiva) : todosProductos;
+      let productosFiltrados = todosProductos.filter(p => obtenerPrecioNumerico(p) !== null);
+      if (categoriaActiva !== 'todas') {
+        productosFiltrados = productosFiltrados.filter(p => p.categoria_id === categoriaActiva);
+      }
 
       if (productosFiltrados.length === 0) {
         container.innerHTML = '<p class="text-muted">No existen registros en esta clasificación.</p>';
@@ -507,7 +597,7 @@
             <div class="card-body d-flex flex-column">
               <h6 class="card-title mb-1">${p.nombre}</h6>
               <p class="card-text small text-muted flex-grow-1">${p.descripcion || ''}</p>
-              <div class="precio-text mb-3">${parseFloat(p.precio).toFixed(2)} CUP</div>
+              <div class="precio-text mb-3">${obtenerPrecioProducto(p)}</div>
               
               <div class="d-flex gap-2 align-items-center">
                 <input type="number" id="qty-${p.id}" class="form-control qty-input" style="width: 70px;" min="1" value="1" ${!horarioAbierto ? 'disabled' : ''}>
@@ -554,7 +644,7 @@
                 <p class="card-text small text-muted flex-grow-1">${listaProductos}</p>
                 <div class="d-flex align-items-center gap-2 mb-3">
                   <s class="text-muted small">${totalOriginal.toFixed(2)}</s>
-                  <span class="precio-text">${precioFinal.toFixed(2)} CUP</span>
+                  <span class="precio-text">${precioFinal.toFixed(2)} ${monedaActiva}</span>
                 </div>
                 
                 <div class="d-flex gap-2 align-items-center">
@@ -606,6 +696,9 @@
       const cantidadExtraida = parseInt(inputElem.value) || 1;
       if (cantidadExtraida < 1) return;
 
+      const precioActual = obtenerPrecioNumerico(producto);
+      if (!precioActual) return; // no tiene precio en la moneda actual
+
       const grupo = carrito.find(item => item.id === idProducto && !item.esCombo);
       if (grupo) {
         grupo.cantidad += cantidadExtraida;
@@ -613,7 +706,8 @@
         carrito.push({
           id: producto.id,
           nombre: producto.nombre,
-          precio: parseFloat(producto.precio),
+          precio: precioActual,
+          moneda: monedaActiva,
           permiteExtras: producto.permite_extras,
           cantidad: cantidadExtraida,
           extras: '',
@@ -647,6 +741,7 @@
           id: combo.id,
           nombre: combo.nombre,
           precio: precioFinal,
+          moneda: monedaActiva,
           permiteExtras: false,
           cantidad: cantidadExtraida,
           extras: '',
@@ -679,7 +774,7 @@
               <div class="fw-bold">${item.nombre}</div>
               ${item.esCombo ? '<small class="text-muted">Lote</small>' : ''}
             </div>
-            <span class="fw-bold">${(item.precio * item.cantidad).toFixed(2)}</span>
+            <span class="fw-bold">${(item.precio * item.cantidad).toFixed(2)} ${item.moneda || monedaActiva}</span>
           </div>
           <div class="d-flex justify-content-between align-items-center">
             <div class="d-flex gap-1 align-items-center">
@@ -697,12 +792,14 @@
 
       const subtotal = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
       document.getElementById('subtotal-carrito').textContent = subtotal.toFixed(2);
+      document.getElementById('subtotal-moneda').textContent = monedaActiva;
 
       const metodoPago = document.getElementById('metodo-pago').value;
       let recargo = 0;
       if (metodoPago === 'transferencia' && recargoTransferencia > 0) {
         recargo = subtotal * (recargoTransferencia / 100);
         document.getElementById('recargo-aplicado').textContent = recargo.toFixed(2);
+        document.getElementById('recargo-moneda').textContent = monedaActiva;
         document.getElementById('recargo-desglose').classList.remove('d-none');
       } else {
         document.getElementById('recargo-desglose').classList.add('d-none');
@@ -713,13 +810,15 @@
       if (repartoSelect && repartoSelect.selectedOptions[0]?.dataset.precio) {
         envio = parseFloat(repartoSelect.selectedOptions[0].dataset.precio);
         document.getElementById('envio-aplicado').textContent = envio.toFixed(2);
+        document.getElementById('envio-moneda').textContent = monedaActiva;
         document.getElementById('envio-desglose').classList.remove('d-none');
       } else {
         document.getElementById('envio-desglose').classList.add('d-none');
       }
 
       const total = subtotal + recargo + envio;
-      document.getElementById('total-pedido').textContent = total.toFixed(2) + ' CUP';
+      document.getElementById('total-pedido').textContent = total.toFixed(2);
+      document.getElementById('total-moneda').textContent = monedaActiva;
 
       const conteoGlobal = carrito.reduce((sum, item) => sum + item.cantidad, 0);
       badge.textContent = conteoGlobal;
@@ -763,9 +862,9 @@
 
       const { error: errorPedido } = await supabaseClient.from('pedidos').insert([{
         nombre, telefono, direccion, referencia: referencia || null,
-        metodo_pago: metodoPago, zona: zonaTexto, total: totalPedido,
+        metodo_pago: metodoPago, moneda: monedaActiva, zona: zonaTexto, total: totalPedido,
         items: carrito.map(item => ({
-          nombre: item.nombre, precio: item.precio, cantidad: item.cantidad,
+          nombre: item.nombre, precio: item.precio, moneda: item.moneda || monedaActiva, cantidad: item.cantidad,
           extras: item.extras || null, esCombo: item.esCombo || false
         })),
         estado: 'pendiente'
@@ -777,18 +876,18 @@
         return;
       }
 
-      const logProductos = carrito.map(item => `${item.cantidad}x ${item.nombre}${item.extras ? ' [' + item.extras + ']' : ''} — ${(item.precio * item.cantidad).toFixed(2)} CUP`).join('\n');
+      const logProductos = carrito.map(item => `${item.cantidad}x ${item.nombre}${item.extras ? ' [' + item.extras + ']' : ''} — ${(item.precio * item.cantidad).toFixed(2)} ${item.moneda || monedaActiva}`).join('\n');
       
       const payloadNtfy = `🤠 PEDIDO GUAJIRO
 👤Titular: ${nombre}
 📞Tel: ${telefono}
 🏠Dir: ${direccion}${referencia ? '\nRef: ' + referencia : ''}
 👣Ruta: ${zonaTexto}
-🪙Liq: ${metodoPago}
+🪙Liq: ${metodoPago} (${monedaActiva})
 ---
 ${logProductos}
 ---
-📥TOTAL: ${totalPedido.toFixed(2)} CUP`;
+📥TOTAL: ${totalPedido.toFixed(2)} ${monedaActiva}`;
 
       fetch(`https://ntfy.sh/${NTFY_TOPIC}`, { method: 'POST', body: payloadNtfy }).catch(() => {});
 
@@ -805,4 +904,4 @@ ${logProductos}
     });
   </script>
 </body>
-</html>
+  </html>

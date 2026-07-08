@@ -779,16 +779,16 @@
 
       const logProductos = carrito.map(item => `${item.cantidad}x ${item.nombre}${item.extras ? ' [' + item.extras + ']' : ''} — ${(item.precio * item.cantidad).toFixed(2)} CUP`).join('\n');
       
-      const payloadNtfy = `🧊 TRANSACCIÓN GUAJIRO
-Titular: ${nombre}
-Tel: ${telefono}
-Dir: ${direccion}${referencia ? '\nRef: ' + referencia : ''}
-Ruta: ${zonaTexto}
-Liq: ${metodoPago}
+      const payloadNtfy = `🤠 PEDIDO GUAJIRO
+👤Titular: ${nombre}
+📞Tel: ${telefono}
+🏠Dir: ${direccion}${referencia ? '\nRef: ' + referencia : ''}
+👣Ruta: ${zonaTexto}
+🪙Liq: ${metodoPago}
 ---
 ${logProductos}
 ---
-TOTAL: ${totalPedido.toFixed(2)} CUP`;
+📥TOTAL: ${totalPedido.toFixed(2)} CUP`;
 
       fetch(`https://ntfy.sh/${NTFY_TOPIC}`, { method: 'POST', body: payloadNtfy }).catch(() => {});
 

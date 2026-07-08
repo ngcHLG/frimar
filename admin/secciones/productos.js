@@ -94,12 +94,19 @@ async function cargarProductos() {
     cont.innerHTML = '<p class="text-muted text-center">No hay productos aún.</p>';
     return;
   }
-  cont.innerHTML = data.map(p => `
+  cont.innerHTML = data.map(p => {
+    // Construir texto de precios
+    const precios = p.precios || {};
+    const preciosTexto = Object.keys(precios).length > 0 
+      ? Object.entries(precios).map(([moneda, valor]) => `${moneda}: ${parseFloat(valor).toFixed(2)}`).join(' · ')
+      : 'Sin precios';
+
+    return `
     <div class="list-item" style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; padding:0.8rem 1rem; margin-bottom:0.8rem; display:flex; align-items:center; justify-content:space-between;">
       <div class="item-info" style="display:flex; align-items:center; gap:1rem; flex-grow:1;">
         <img src="${p.foto_url || ''}" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:4px;" onerror="this.style.display='none'">
         <span class="item-name" style="font-weight:600; text-transform:uppercase;">${p.nombre}</span>
-        <span style="font-size:0.85rem; color:var(--text-secondary);">${p.categorias?.nombre || 'Sin cat.'}</span>
+        <span style="font-size:0.85rem; color:var(--text-secondary);">${preciosTexto}</span>
         <span style="font-size:0.85rem;">${p.activo ? 'Visible' : 'Oculto'}</span>
       </div>
       <div class="d-flex gap-1">
@@ -107,7 +114,8 @@ async function cargarProductos() {
         <button class="btn btn-outline-accent btn-sm" onclick="window.productos.toggle('${p.id}')"><i class="bi ${p.activo ? 'bi-eye-slash' : 'bi-eye'}"></i></button>
         <button class="btn btn-outline-accent btn-sm" onclick="window.productos.eliminar('${p.id}')"><i class="bi bi-trash"></i></button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 async function cargarCategoriasEnSelect() {

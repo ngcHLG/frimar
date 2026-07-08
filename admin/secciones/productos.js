@@ -1,12 +1,16 @@
 window.productos = {
   init: async function(container) {
     container.innerHTML = `
-      <h2 style="color: var(--text-main);"><i class="bi bi-box-fill"></i> Productos</h2>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 style="color: var(--text-main);"><i class="bi bi-box-fill"></i> Productos</h2>
+        <button class="btn btn-accent btn-sm" id="btn-nuevo-prod"><i class="bi bi-plus-lg"></i> Nuevo</button>
+      </div>
       <div id="productos-lista" class="mt-3"></div>
       ${modalHTML()}
     `;
     await cargarProductos();
     await cargarCategoriasEnSelect();
+    document.getElementById('btn-nuevo-prod').addEventListener('click', this.abrirNuevo.bind(this));
     document.getElementById('btn-prod-guardar').addEventListener('click', guardar);
     document.getElementById('prod-foto').addEventListener('change', previewFoto);
   },
@@ -15,7 +19,6 @@ window.productos = {
     document.getElementById('prod-id').value = '';
     document.getElementById('prod-nombre').value = '';
     document.getElementById('prod-descripcion').value = '';
-    document.getElementById('prod-precio').value = '';
     document.getElementById('prod-categoria').value = '';
     document.getElementById('prod-extras').checked = true;
     document.getElementById('prod-foto').value = '';
@@ -34,7 +37,6 @@ function modalHTML() {
           <input type="hidden" id="prod-id">
           <div class="mb-3"><label class="form-label">Nombre</label><input type="text" class="form-control" id="prod-nombre" required></div>
           <div class="mb-3"><label class="form-label">Descripción</label><textarea class="form-control" id="prod-descripcion" rows="2"></textarea></div>
-          <div class="mb-3"><label class="form-label">Precio base (CUP)</label><input type="number" step="0.01" min="0" class="form-control" id="prod-precio" required></div>
           <div class="mb-3"><label class="form-label">Categoría</label><select class="form-select" id="prod-categoria"><option value="">Sin categoría</option></select></div>
           <div class="mb-3">
             <label class="form-label">Precios por moneda</label>
@@ -57,7 +59,6 @@ async function llenarMonedasCheckboxes(preciosExistentes = {}) {
   const container = document.getElementById('monedas-precios-container');
   if (!container) return;
 
-  // Obtener monedas activas desde la tabla 'monedas'
   const { data: monedas, error } = await window.guajiroPC.from('monedas').select('*').eq('activo', true).order('codigo');
   if (error || !monedas) {
     container.innerHTML = '<p class="text-muted">No hay monedas disponibles.</p>';
@@ -77,7 +78,6 @@ async function llenarMonedasCheckboxes(preciosExistentes = {}) {
   }).join('');
 }
 
-// Función global para alternar el campo de precio
 window.togglePrecioMoneda = function(codigo) {
   const checkbox = document.getElementById(`moneda-${codigo}`);
   const precioInput = document.getElementById(`precio-${codigo}`);
@@ -99,7 +99,7 @@ async function cargarProductos() {
       <div class="item-info" style="display:flex; align-items:center; gap:1rem; flex-grow:1;">
         <img src="${p.foto_url || ''}" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:4px;" onerror="this.style.display='none'">
         <span class="item-name" style="font-weight:600; text-transform:uppercase;">${p.nombre}</span>
-        <span style="font-size:0.85rem; color:var(--text-secondary);">${p.categorias?.nombre || 'Sin cat.'} · ${parseFloat(p.precio).toFixed(2)} CUP</span>
+        <span style="font-size:0.85rem; color:var(--text-secondary);">${p.categorias?.nombre || 'Sin cat.'}</span>
         <span style="font-size:0.85rem;">${p.activo ? 'Visible' : 'Oculto'}</span>
       </div>
       <div class="d-flex gap-1">
@@ -136,12 +136,11 @@ async function guardar() {
   const id = document.getElementById('prod-id').value;
   const nombre = document.getElementById('prod-nombre').value.trim();
   const descripcion = document.getElementById('prod-descripcion').value.trim();
-  const precio = parseFloat(document.getElementById('prod-precio').value);
   const categoria_id = document.getElementById('prod-categoria').value || null;
   const permite_extras = document.getElementById('prod-extras').checked;
   const archivo = document.getElementById('prod-foto').files[0];
 
-  if (!nombre || isNaN(precio)) { alert('Nombre y precio base requeridos'); return; }
+  if (!nombre) { alert('El nombre es obligatorio'); return; }
 
   // Construir objeto de precios por moneda
   const precios = {};
@@ -152,6 +151,11 @@ async function guardar() {
       precios[moneda] = parseFloat(inputPrecio.value);
     }
   });
+
+  if (Object.keys(precios).length === 0) {
+    alert('Debes marcar al menos una moneda e ingresar un precio.');
+    return;
+  }
 
   let foto_url = null;
   if (archivo) {
@@ -166,7 +170,7 @@ async function guardar() {
     foto_url = old?.foto_url || null;
   }
 
-  const datos = { nombre, descripcion, precio, categoria_id, permite_extras, foto_url, precios };
+  const datos = { nombre, descripcion, categoria_id, permite_extras, foto_url, precios };
 
   if (id) {
     const { error } = await window.guajiroPC.from('productos').update(datos).eq('id', id);
@@ -187,7 +191,6 @@ window.productos.editar = async function(id) {
   document.getElementById('prod-id').value = data.id;
   document.getElementById('prod-nombre').value = data.nombre;
   document.getElementById('prod-descripcion').value = data.descripcion || '';
-  document.getElementById('prod-precio').value = data.precio || '';
   document.getElementById('prod-categoria').value = data.categoria_id || '';
   document.getElementById('prod-extras').checked = data.permite_extras;
 

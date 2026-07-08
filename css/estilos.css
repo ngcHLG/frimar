@@ -241,10 +241,11 @@ h1, h2, h3, h4, h5, .navbar-brand, .card-title, .offcanvas-title {
   bottom: 20px;
   right: 90px;
   z-index: 1031;
-  flex-direction: column;
+  flex-direction: row;
   gap: 8px;
-  max-height: 300px;
-  overflow-y: auto;
+  max-width: calc(100vw - 110px);
+  overflow-x: auto;
+  white-space: nowrap;
   padding: 4px;
   scrollbar-width: thin;
 }
@@ -267,6 +268,7 @@ h1, h2, h3, h4, h5, .navbar-brand, .card-title, .offcanvas-title {
   justify-content: center;
   cursor: pointer;
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  flex-shrink: 0;
   transition: transform 0.15s;
   text-transform: uppercase;
 }

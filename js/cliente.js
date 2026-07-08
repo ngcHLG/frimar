@@ -122,12 +122,15 @@ async function actualizarMetodosPago() {
     .single();
 
   const metodos = data?.metodos_pago || ['efectivo', 'transferencia'];
+  const container = document.getElementById('metodo-pago-container');
   const select = document.getElementById('metodo-pago');
+
+  if (!container || !select) return;
+
   const opciones = {
     efectivo: 'Efectivo',
     transferencia: 'Transferencia'
   };
-
   select.innerHTML = '';
   metodos.forEach(m => {
     const opt = document.createElement('option');
@@ -136,11 +139,25 @@ async function actualizarMetodosPago() {
     select.appendChild(opt);
   });
 
-  // Si solo hay un método, lo seleccionamos automáticamente
-  if (metodos.length === 1) {
-    select.value = metodos[0];
+  if (metodos.length <= 1) {
+    container.classList.add('d-none');
+    metodoPagoActivo = metodos[0] || 'efectivo';
+  } else {
+    container.classList.remove('d-none');
+    if (metodos.includes(metodoPagoActivo)) {
+      select.value = metodoPagoActivo;
+    } else {
+      select.value = metodos[0];
+      metodoPagoActivo = metodos[0];
+    }
   }
-  // Actualizar la info del recargo
+
+  select.onchange = () => {
+    metodoPagoActivo = select.value;
+    actualizarInfoRecargo();
+    actualizarCarrito();
+  };
+
   actualizarInfoRecargo();
 }
 
@@ -161,11 +178,10 @@ async function actualizarRecargoDesdeMoneda() {
 }
 
 function actualizarInfoRecargo() {
-  const metodo = document.getElementById('metodo-pago')?.value;
   const info = document.getElementById('recargo-info');
-  if (!info || !metodo) return;
+  if (!info) return;
 
-  if (metodo === 'transferencia' && recargoTransferencia > 0) {
+  if (metodoPagoActivo === 'transferencia' && recargoTransferencia > 0) {
     info.textContent = `Recargo del ${recargoTransferencia}% sobre subtotal en ${monedaActiva}.`;
     info.classList.remove('d-none');
   } else {
@@ -195,7 +211,6 @@ async function cargarRepartosEnvio() {
   datalist.innerHTML = '';
   if (!data || data.length === 0) return;
 
-  // Guardamos los datos para usar en la selección
   window._repartosData = data;
   data.forEach(r => {
     const opt = document.createElement('option');
@@ -212,7 +227,6 @@ window.seleccionarReparto = function(nombreReparto) {
   if (reparto) {
     document.getElementById('reparto-input').value = reparto.nombre;
     document.getElementById('reparto-precio').textContent = `Envío: +${parseFloat(reparto.precio).toFixed(2)} CUP`;
-    // Guardamos el precio seleccionado en un atributo data del input para usarlo en actualizarCarrito
     document.getElementById('reparto-input').dataset.precio = reparto.precio;
     document.getElementById('reparto-input').dataset.id = reparto.id;
   } else {
@@ -414,4 +428,4 @@ async function verificarHorario() {
 
   document.getElementById('horario-aviso').classList.toggle('d-none', horarioAbierto);
   document.getElementById('horario-texto').textContent = textoHorario;
-  }
+      }

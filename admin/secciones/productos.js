@@ -1,16 +1,12 @@
 window.productos = {
   init: async function(container) {
     container.innerHTML = `
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 style="color: var(--text-main);"><i class="bi bi-box-fill"></i> Productos</h2>
-        <button class="btn btn-accent btn-sm" id="btn-nuevo-prod"><i class="bi bi-plus-lg"></i> Nuevo</button>
-      </div>
+      <h2 style="color: var(--text-main);"><i class="bi bi-box-fill"></i> Productos</h2>
       <div id="productos-lista" class="mt-3"></div>
       ${modalHTML()}
     `;
     await cargarProductos();
     await cargarCategoriasEnSelect();
-    document.getElementById('btn-nuevo-prod').addEventListener('click', this.abrirNuevo.bind(this));
     document.getElementById('btn-prod-guardar').addEventListener('click', guardar);
     document.getElementById('prod-foto').addEventListener('change', previewFoto);
   },
@@ -95,7 +91,6 @@ async function cargarProductos() {
     return;
   }
   cont.innerHTML = data.map(p => {
-    // Construir texto de precios
     const precios = p.precios || {};
     const preciosTexto = Object.keys(precios).length > 0 
       ? Object.entries(precios).map(([moneda, valor]) => `${moneda}: ${parseFloat(valor).toFixed(2)}`).join(' · ')
@@ -150,7 +145,6 @@ async function guardar() {
 
   if (!nombre) { alert('El nombre es obligatorio'); return; }
 
-  // Construir objeto de precios por moneda
   const precios = {};
   document.querySelectorAll('.moneda-check:checked').forEach(cb => {
     const moneda = cb.value;

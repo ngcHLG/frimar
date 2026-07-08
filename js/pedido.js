@@ -24,14 +24,13 @@ async function confirmarPedido() {
   }
   errorDiv.classList.add('d-none');
 
-  const metodoPago = document.getElementById('metodo-pago').value;
-  const repartoSelect = document.getElementById('reparto-select');
-  const zonaTexto = repartoSelect.options[repartoSelect.selectedIndex]?.textContent || 'Domicilio';
+  const repartoSelect = document.getElementById('reparto-input');
+  const zonaTexto = repartoSelect.value || 'Domicilio';
   const totalPedido = parseFloat(document.getElementById('total-pedido').textContent);
 
   const { error: errorPedido } = await supabaseClient.from('pedidos').insert([{
     nombre, telefono, direccion, referencia: referencia || null,
-    metodo_pago: metodoPago, moneda: monedaActiva, zona: zonaTexto, total: totalPedido,
+    metodo_pago: metodoPagoActivo, moneda: monedaActiva, zona: zonaTexto, total: totalPedido,
     items: carrito.map(item => ({
       nombre: item.nombre, precio: item.precio, moneda: item.moneda || monedaActiva, cantidad: item.cantidad,
       extras: item.extras || null, esCombo: item.esCombo || false
@@ -54,7 +53,7 @@ async function confirmarPedido() {
 📞Tel: ${telefono}
 🏠Dir: ${direccion}${referencia ? '\nRef: ' + referencia : ''}
 👣Ruta: ${zonaTexto}
-🪙Liq: ${metodoPago} (${monedaActiva})
+🪙Liq: ${metodoPagoActivo} (${monedaActiva})
 ---
 ${logProductos}
 ---
@@ -72,4 +71,4 @@ ${logProductos}
 
   carrito = [];
   actualizarCarrito();
-    }
+}

@@ -34,7 +34,7 @@ function estaAbiertoAhora(horario) {
 }
 
 async function cargarHorarios() {
-  const { data, error } = await window.comecomeSupabase
+  const { data, error } = await window.guajiroPC
     .from('horarios')
     .select('*')
     .order('dia_semana');
@@ -67,7 +67,7 @@ async function cargarHorarios() {
 }
 
 async function abrirModal(id) {
-  const { data, error } = await window.comecomeSupabase
+  const { data, error } = await window.guajiroPC
     .from('horarios')
     .select('*')
     .eq('id', id)
@@ -90,7 +90,7 @@ async function guardarHorario() {
   const hora_apertura = abierto ? null : document.getElementById('horario-apertura').value;
   const hora_cierre = abierto ? null : document.getElementById('horario-cierre').value;
 
-  const { error } = await window.comecomeSupabase
+  const { error } = await window.guajiroPC
     .from('horarios')
     .update({ abierto, hora_apertura, hora_cierre })
     .eq('id', id);

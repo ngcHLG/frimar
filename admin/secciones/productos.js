@@ -1,20 +1,26 @@
-// secciones/productos.js
 window.productos = {
   init: async function(container) {
     container.innerHTML = `
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 style="color: var(--text-main);"><i class="bi bi-box-fill"></i> Productos</h2>
-        <button class="btn btn-accent btn-sm" id="btn-nuevo-prod"><i class="bi bi-plus-lg"></i> Nuevo</button>
-      </div>
-      <div id="productos-lista"></div>
+      <h2 style="color: var(--text-main);"><i class="bi bi-box-fill"></i> Productos</h2>
+      <div id="productos-lista" class="mt-3"></div>
       ${modalHTML()}
     `;
-
     await cargarProductos();
     await cargarCategoriasEnSelect();
-    document.getElementById('btn-nuevo-prod').addEventListener('click', abrirNuevo);
     document.getElementById('btn-prod-guardar').addEventListener('click', guardar);
     document.getElementById('prod-foto').addEventListener('change', previewFoto);
+  },
+  abrirNuevo: function() {
+    document.getElementById('prod-id').value = '';
+    document.getElementById('prod-nombre').value = '';
+    document.getElementById('prod-descripcion').value = '';
+    document.getElementById('prod-precio').value = '';
+    document.getElementById('prod-categoria').value = '';
+    document.getElementById('prod-extras').checked = true;
+    document.getElementById('prod-foto').value = '';
+    document.getElementById('preview-foto').classList.add('d-none');
+    document.getElementById('prod-modal-titulo').textContent = 'Nuevo producto';
+    new bootstrap.Modal(document.getElementById('productoModal')).show();
   }
 };
 
@@ -54,7 +60,8 @@ async function cargarProductos() {
   const { data } = await window.guajiroPC.from('productos').select('*, categorias(nombre)').order('nombre');
   const cont = document.getElementById('productos-lista');
   if (!data || data.length === 0) {
-    cont.innerHTML = '<p class="text-muted text-center">No hay productos aún.</p>'; return;
+    cont.innerHTML = '<p class="text-muted text-center">No hay productos aún.</p>';
+    return;
   }
   cont.innerHTML = data.map(p => `
     <div class="list-item" style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; padding:0.8rem 1rem; margin-bottom:0.8rem; display:flex; align-items:center; justify-content:space-between;">
@@ -82,19 +89,6 @@ async function cargarCategoriasEnSelect() {
     o.textContent = c.nombre;
     select.appendChild(o);
   });
-}
-
-function abrirNuevo() {
-  document.getElementById('prod-id').value = '';
-  document.getElementById('prod-nombre').value = '';
-  document.getElementById('prod-descripcion').value = '';
-  document.getElementById('prod-precio').value = '';
-  document.getElementById('prod-categoria').value = '';
-  document.getElementById('prod-extras').checked = true;
-  document.getElementById('prod-foto').value = '';
-  document.getElementById('preview-foto').classList.add('d-none');
-  document.getElementById('prod-modal-titulo').textContent = 'Nuevo producto';
-  new bootstrap.Modal(document.getElementById('productoModal')).show();
 }
 
 async function guardar() {

@@ -1,10 +1,10 @@
 // comun.js - Funciones compartidas del panel ComeCome
 (function() {
-  const SUPABASE_URL = 'https://xjjbrnjgpncxwqishseo.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_e68llCL_CYuf2M9TyVcdWA_HdMDYpVF';
+  const SUPABASE_URL = 'https://xntjoyqwxqmjfdltydol.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_j1aIGvPLNaTTAbvlygmqzQ_-mCoDRBY';
 
   // Inicializar Supabase en una variable con nombre único
-  window.comecomeSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  window.guajiroPC = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   // Verificar sesión
   async function verificarSesion() {

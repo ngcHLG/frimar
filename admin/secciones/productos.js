@@ -70,7 +70,7 @@ async function llenarMonedasCheckboxes(preciosExistentes = {}) {
     return `
       <div class="form-check form-check-inline mb-2">
         <input class="form-check-input moneda-check" type="checkbox" id="moneda-${m.codigo}" value="${m.codigo}" ${checked} onchange="togglePrecioMoneda('${m.codigo}')">
-        <label class="form-check-label" for="moneda-${m.codigo}">${m.codigo} - ${m.nombre}</label>
+        <label class="form-check-label" for="moneda-${m.codigo}">${m.codigo}</label>
         <input type="number" step="0.01" min="0" class="form-control form-control-sm d-inline-block ms-2" id="precio-${m.codigo}" value="${precioValor}" style="width: 100px;" ${checked ? '' : 'disabled'}>
       </div>
     `;

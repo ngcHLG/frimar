@@ -81,7 +81,7 @@
       <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
     </div>
     <div class="offcanvas-body d-flex flex-column">
-      <div id="carrito-lista" class="list-group mb-4 flex-grow-1 overflow-auto"></div>
+      <div id="carrito-lista" class="list-group mb-3 flex-grow-1 overflow-auto" style="max-height: calc(100vh - 380px); min-height: 200px;"></div>
 
       <div class="mt-auto">
         <div class="mb-3">
@@ -90,14 +90,14 @@
             <option value="efectivo">Efectivo</option>
             <option value="transferencia">Transferencia</option>
           </select>
-          <small id="recargo-info" class="text-muted mt-1 d-none d-block"></small>
+          <small id="recargo-info" class="text-muted mt-1 d-none"></small>
         </div>
 
         <div class="mb-3">
           <label class="form-label fw-bold">Reparto</label>
-          <select id="reparto-select" class="form-select" onchange="actualizarCarrito()">
-            <option value="">Seleccione zona de envío...</option>
-          </select>
+          <input type="text" class="form-control" list="repartos-list" id="reparto-input" placeholder="Buscar reparto..." onchange="seleccionarReparto(this.value)">
+          <datalist id="repartos-list"></datalist>
+          <small id="reparto-precio" class="text-muted"></small>
         </div>
 
         <div class="bg-body p-3 rounded border">
@@ -112,6 +112,10 @@
           <div id="envio-desglose" class="d-flex justify-content-between text-muted mb-2 d-none">
             <span>Envío:</span>
             <span><span id="envio-aplicado">0.00</span> <span id="envio-moneda">CUP</span></span>
+          </div>
+          <div id="envio-cup-desglose" class="d-flex justify-content-between text-muted mb-2 d-none">
+            <span>Envío (CUP):</span>
+            <span><span id="envio-cup-aplicado">0.00</span> CUP</span>
           </div>
           <div class="d-flex justify-content-between fw-bold fs-5 border-top border-secondary pt-2 mt-2">
             <span>Total:</span>

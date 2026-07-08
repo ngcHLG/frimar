@@ -10,17 +10,23 @@ window.combos = {
     document.getElementById('combo-tipo').addEventListener('change', toggleCamposMoneda);
     document.getElementById('btn-combo-guardar').addEventListener('click', comboGuardar);
   },
-  abrirNuevo: function() {
+  abrirNuevo: async function() {
     document.getElementById('combo-id').value = '';
     document.getElementById('combo-nombre').value = '';
     document.getElementById('combo-tipo').value = 'porcentaje';
-    document.getElementById('combo-valor').value = '';
+    document.getElementById('combo-valor-porcentaje').value = '';
     document.getElementById('combo-activo').checked = true;
     document.getElementById('combo-modal-titulo').textContent = 'Nuevo combo';
+
+    // Limpiar monedas fijas
     document.querySelectorAll('.moneda-fija-check').forEach(cb => cb.checked = false);
     document.querySelectorAll('.moneda-fija-precio').forEach(inp => inp.value = '');
+
+    // Cargar listas de monedas y productos
+    await llenarMonedasFijo({});
+    await cargarProductosEnSelectCombo();
     toggleCamposMoneda();
-    cargarProductosEnSelectCombo();
+
     new bootstrap.Modal(document.getElementById('comboModal')).show();
   }
 };
@@ -114,7 +120,6 @@ async function combosCargar() {
       const montos = precios.montos || {};
       descuentoTexto = Object.keys(montos).map(mon => `${mon}: ${montos[mon]}`).join(', ');
     } else {
-      // compatibilidad con datos antiguos
       if (c.tipo_descuento === 'porcentaje') descuentoTexto = `-${c.valor_descuento}%`;
       else descuentoTexto = `Fijo: ${c.valor_descuento}`;
     }
@@ -173,7 +178,7 @@ async function comboGuardar() {
 
   const comboData = {
     nombre,
-    tipo_descuento: tipo,  // mantenemos compatibilidad
+    tipo_descuento: tipo,
     valor_descuento: tipo === 'porcentaje' ? precios.valor : 0,
     precios: precios,
     activo
@@ -200,10 +205,8 @@ window.combos.editar = async function(id) {
   document.getElementById('combo-activo').checked = c.activo;
   document.getElementById('combo-modal-titulo').textContent = 'Editar combo';
 
-  // Cargar productos
   await cargarProductosEnSelectCombo();
 
-  // Precargar monedas fijas o porcentaje
   const precios = c.precios || {};
   if (precios.tipo === 'porcentaje') {
     document.getElementById('combo-valor-porcentaje').value = precios.valor || '';
@@ -213,7 +216,6 @@ window.combos.editar = async function(id) {
 
   await llenarMonedasFijo(precios.tipo === 'fijo' ? precios.montos || {} : {});
 
-  // Marcar productos existentes
   const { data: items } = await window.guajiroPC.from('combo_items').select('product_id, cantidad').eq('combo_id', id);
   if (items) {
     items.forEach(it => {

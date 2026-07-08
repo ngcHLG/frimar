@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function cargarRepartos() {
-  const { data, error } = await window.comecomeSupabase
+  const { data, error } = await window.guajiroPC
     .from('repartos')
     .select('*')
     .order('nombre');
@@ -50,7 +50,7 @@ function abrirModalNuevo() {
 }
 
 async function abrirModalEditar(id) {
-  const { data, error } = await window.comecomeSupabase
+  const { data, error } = await window.guajiroPC
     .from('repartos')
     .select('*')
     .eq('id', id)
@@ -80,13 +80,13 @@ async function guardarReparto() {
   }
 
   if (id) {
-    const { error } = await window.comecomeSupabase
+    const { error } = await window.guajiroPC
       .from('repartos')
       .update({ nombre, distancia, precio, activo })
       .eq('id', id);
     if (error) { mostrarMensaje('Error al actualizar'); return; }
   } else {
-    const { error } = await window.comecomeSupabase
+    const { error } = await window.guajiroPC
       .from('repartos')
       .insert([{ nombre, distancia, precio, activo }]);
     if (error) { mostrarMensaje('Error al crear'); return; }
@@ -97,14 +97,14 @@ async function guardarReparto() {
 }
 
 async function toggleReparto(id) {
-  const { data: reparto } = await window.comecomeSupabase
+  const { data: reparto } = await window.guajiroPC
     .from('repartos')
     .select('activo')
     .eq('id', id)
     .single();
   if (!reparto) return;
 
-  await window.comecomeSupabase
+  await window.guajiroPC
     .from('repartos')
     .update({ activo: !reparto.activo })
     .eq('id', id);
@@ -112,7 +112,7 @@ async function toggleReparto(id) {
 }
 
 async function eliminarReparto(id) {
-  const { error } = await window.comecomeSupabase
+  const { error } = await window.guajiroPC
     .from('repartos')
     .delete()
     .eq('id', id);

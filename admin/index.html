@@ -31,6 +31,8 @@
       --accent-hover: var(--c-02);
       --nav-bg: var(--c-02);
       --nav-text: var(--c-05);
+      --modal-bg: var(--c-white);
+      --modal-backdrop: rgba(0,0,0,0.5);
     }
     [data-theme="dark"] {
       --bg-body: var(--c-01);
@@ -43,6 +45,8 @@
       --accent-hover: var(--c-06);
       --nav-bg: var(--c-01);
       --nav-text: var(--c-06);
+      --modal-bg: var(--c-02);
+      --modal-backdrop: rgba(0,0,0,0.7);
     }
     * { transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
     body {
@@ -106,7 +110,86 @@
       display: flex; align-items: center; justify-content: center; font-size: 1.3rem; cursor: pointer;
     }
     .fab-btn:hover { background-color: var(--accent-hover); }
-    #fab-add { display: none; }  /* se muestra solo en secciones que lo necesitan */
+    #fab-add { display: none; }
+
+    /* Modales */
+    .modal-content {
+      background-color: var(--modal-bg);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+    .modal-header {
+      border-bottom: 1px solid var(--border-color);
+    }
+    .modal-footer {
+      border-top: 1px solid var(--border-color);
+    }
+    .modal-title {
+      color: var(--text-main);
+    }
+    [data-theme="dark"] .modal-header .btn-close {
+      filter: invert(1);
+    }
+    .modal-backdrop {
+      background-color: var(--modal-backdrop);
+    }
+
+    /* Estilos para las tarjetas de lista (comunes a todas las secciones) */
+    .list-item {
+      background-color: var(--bg-surface) !important;
+      border: 1px solid var(--border-color) !important;
+      border-radius: 8px !important;
+      padding: 0.8rem 1rem !important;
+      margin-bottom: 0.8rem !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 0.8rem;
+      overflow: hidden; /* evita que nada se salga */
+    }
+    .list-item .item-info {
+      display: flex !important;
+      align-items: center !important;
+      gap: 1rem !important;
+      flex: 1 1 auto;
+      min-width: 0; /* necesario para que el truncado funcione */
+    }
+    .list-item .item-name {
+      font-weight: 600;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+    .list-item .item-meta,
+    .list-item .item-info span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    /* Grupo de botones en la derecha, siempre visible y sin encogerse */
+    .list-item .d-flex.gap-1,
+    .list-item .d-flex.gap-2 {
+      flex-shrink: 0;
+    }
+    /* Ajuste para pantallas muy pequeñas: reducimos padding y fuente */
+    @media (max-width: 400px) {
+      .list-item {
+        padding: 0.6rem 0.8rem !important;
+      }
+      .list-item .item-name {
+        font-size: 0.85rem;
+      }
+      .list-item .item-meta,
+      .list-item .item-info span {
+        font-size: 0.8rem;
+      }
+      .btn-outline-accent {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.75rem;
+      }
+    }
   </style>
 </head>
 <body>

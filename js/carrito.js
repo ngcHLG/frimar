@@ -36,9 +36,8 @@ async function agregarComboAlCarrito(comboId) {
   const cantidadExtraida = parseInt(inputElem.value) || 1;
   if (cantidadExtraida < 1) return;
 
-  // Obtener precio del combo en la moneda activa
   const precioData = await obtenerPrecioCombo(comboId);
-  if (!precioData) return; // combo no disponible en esta moneda
+  if (!precioData) return;
 
   const grupo = carrito.find(item => item.id === comboId && item.esCombo);
   if (grupo) {
@@ -141,4 +140,4 @@ function actualizarExtras(index, valor) {
 function eliminarDelCarrito(index) {
   carrito.splice(index, 1);
   actualizarCarrito();
-}
+  }

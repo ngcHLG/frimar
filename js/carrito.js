@@ -36,24 +36,18 @@ async function agregarComboAlCarrito(comboId) {
   const cantidadExtraida = parseInt(inputElem.value) || 1;
   if (cantidadExtraida < 1) return;
 
-  const { data: combo } = await supabaseClient.from('combos').select('*').eq('id', comboId).single();
-  if (!combo) return;
+  // Obtener precio del combo en la moneda activa
+  const precioData = await obtenerPrecioCombo(comboId);
+  if (!precioData) return; // combo no disponible en esta moneda
 
-  const { data: items } = await supabaseClient.from('combo_items').select('*, productos(nombre, precio)').eq('combo_id', comboId);
-  const totalOriginal = (items || []).reduce((s, i) => s + (parseFloat(i.productos.precio) * i.cantidad), 0);
-
-  let precioFinal = totalOriginal;
-  if (combo.tipo_descuento === 'porcentaje') precioFinal = totalOriginal * (1 - combo.valor_descuento / 100);
-  else if (combo.tipo_descuento === 'fijo') precioFinal = parseFloat(combo.valor_descuento);
-
-  const grupo = carrito.find(item => item.id === combo.id && item.esCombo);
+  const grupo = carrito.find(item => item.id === comboId && item.esCombo);
   if (grupo) {
     grupo.cantidad += cantidadExtraida;
   } else {
     carrito.push({
-      id: combo.id,
-      nombre: combo.nombre,
-      precio: precioFinal,
+      id: comboId,
+      nombre: precioData.combo.nombre,
+      precio: precioData.finalPrice,
       moneda: monedaActiva,
       permiteExtras: false,
       cantidad: cantidadExtraida,

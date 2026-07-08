@@ -22,8 +22,9 @@ async function cargarMonedas() {
 
 function generarBotonesMoneda() {
   const container = document.getElementById('moneda-list');
-  container.innerHTML = monedasDisponibles.map(cod =>
-    `<button class="moneda-chip ${cod === monedaActiva ? 'active' : ''}" onclick="cambiarMoneda('${cod}')">${cod}</button>`
+  const otrasMonedas = monedasDisponibles.filter(cod => cod !== monedaActiva);
+  container.innerHTML = otrasMonedas.map(cod =>
+    `<button class="moneda-chip" onclick="cambiarMoneda('${cod}')">${cod}</button>`
   ).join('');
 }
 
@@ -299,4 +300,4 @@ async function verificarHorario() {
 
   document.getElementById('horario-aviso').classList.toggle('d-none', horarioAbierto);
   document.getElementById('horario-texto').textContent = textoHorario;
-}
+          }

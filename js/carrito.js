@@ -14,8 +14,10 @@ function agregarAlCarrito(idProducto) {
 
   const min = obtenerCantidadMinima(producto);
   if (cantidadDeseada < min) {
-    cantidadDeseada = min;            // se ajusta automáticamente al mínimo
-    inputElem.value = min;            // corregimos también el campo visual
+    // Mostrar toast de aviso sin añadir nada al carrito
+    mostrarToast(`Cantidad mínima en ${monedaActiva}: ${min}`);
+    inputElem.value = min; // corregir el campo visual
+    return;                // NO se agrega al carrito
   }
 
   const grupo = carrito.find(item => item.id === idProducto && !item.esCombo);
@@ -34,8 +36,22 @@ function agregarAlCarrito(idProducto) {
       items: null
     });
   }
-  inputElem.value = min; // dejamos el campo listo para la siguiente compra
+  inputElem.value = min;
   actualizarCarrito();
+}
+
+// Función para mostrar un toast reutilizando el existente
+function mostrarToast(mensaje) {
+  const toastEl = document.getElementById('toastPedido');
+  // Cambiar el contenido del toast
+  const msgDiv = toastEl.querySelector('.toast-body');
+  if (msgDiv) {
+    msgDiv.innerHTML = `<div><strong>Aviso</strong><br><small>${mensaje}</small></div>`;
+  }
+  // Mostrar el toast
+  toastEl.style.display = 'block';
+  const toast = new bootstrap.Toast(toastEl);
+  toast.show();
 }
 
 async function agregarComboAlCarrito(comboId) {
@@ -167,4 +183,4 @@ function actualizarExtras(index, valor) {
 function eliminarDelCarrito(index) {
   carrito.splice(index, 1);
   actualizarCarrito();
-    }
+}

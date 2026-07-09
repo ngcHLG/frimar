@@ -3,36 +3,14 @@
 
 function actualizarCantidadManual(index, inputObj) {
   const val = parseInt(inputObj.value);
-  const item = carrito[index];
 
-  // Determinar la cantidad mínima (solo para productos, no combos)
-  let min = 1;
-  if (!item.esCombo) {
-    const producto = todosProductos.find(p => p.id === item.id);
-    if (producto) min = obtenerCantidadMinima(producto);
-  }
-
-  // Si el valor es inválido o menor que 1
+  // Si el valor es inválido o menor que 1, se elimina el ítem
   if (isNaN(val) || val < 1) {
-    if (min > 1) {
-      carrito[index].cantidad = min;
-      inputObj.value = min;
-      actualizarCarrito();
-    } else {
-      eliminarDelCarrito(index);
-    }
+    eliminarDelCarrito(index);
     return;
   }
 
-  // Si el valor es menor que el mínimo, lo ajustamos sin avisar
-  if (val < min) {
-    carrito[index].cantidad = min;
-    inputObj.value = min;
-    actualizarCarrito();
-    return;
-  }
-
-  // Valor válido
+  // Valor válido (la validación del mínimo se hace al proceder al pago)
   carrito[index].cantidad = val;
   actualizarCarrito();
 }
@@ -157,3 +135,30 @@ function eliminarDelCarrito(index) {
   carrito.splice(index, 1);
   actualizarCarrito();
 }
+
+// ─── Validación de cantidad mínima al proceder al pago ───
+function intentarProcederPago() {
+  const invalidos = [];
+
+  carrito.forEach(item => {
+    if (item.esCombo) return;
+    const producto = todosProductos.find(p => p.id === item.id);
+    if (!producto) return;
+    const min = obtenerCantidadMinima(producto);
+    if (item.cantidad < min) {
+      invalidos.push({ nombre: item.nombre, min });
+      item.cantidad = min;
+    }
+  });
+
+  if (invalidos.length > 0) {
+    actualizarCarrito();
+    const detalle = invalidos.map(i => `${i.nombre} (mín. ${i.min})`).join(', ');
+    document.getElementById('toast-min-text').textContent = `Ajustamos la cantidad mínima requerida de: ${detalle}.`;
+    new bootstrap.Toast(document.getElementById('toastCantidadMinima')).show();
+    return;
+  }
+
+  bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('facturacionOffcanvas')).show();
+}
+

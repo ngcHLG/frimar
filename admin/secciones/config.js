@@ -18,6 +18,7 @@ window.config = {
     document.getElementById('mp-efectivo').checked = false;
     document.getElementById('mp-transferencia').checked = false;
     document.getElementById('moneda-recargo').value = 0;
+    document.getElementById('moneda-aplica-domicilio').checked = true;
     document.getElementById('moneda-modal-titulo').textContent = 'Nueva moneda';
     new bootstrap.Modal(document.getElementById('monedaModal')).show();
   }
@@ -42,6 +43,10 @@ function modalHTML() {
             <input type="number" step="0.01" min="0" class="form-control" id="moneda-recargo" value="0">
             <small class="text-muted">Se aplica al subtotal cuando el pago es por transferencia en esta moneda.</small>
           </div>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="moneda-aplica-domicilio" checked>
+            <label class="form-check-label" for="moneda-aplica-domicilio">Aplica cargo de domicilio</label>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-accent btn-sm" data-bs-dismiss="modal">Cancelar</button>
@@ -65,6 +70,7 @@ async function cargarMonedas() {
         <span style="font-size:0.85rem; color:var(--text-secondary);">
           Métodos: ${(m.metodos_pago || []).join(', ') || 'Ninguno'}
           ${(m.metodos_pago || []).includes('transferencia') ? ` | Recargo: ${parseFloat(m.recargo_transferencia || 0)}%` : ''}
+          ${m.aplica_domicilio ? ' | +Domicilio' : ' | Sin domicilio'}
         </span>
       </div>
       <div class="d-flex gap-1">
@@ -83,6 +89,7 @@ window.config.editarMoneda = async function(id) {
   document.getElementById('mp-efectivo').checked = (data.metodos_pago || []).includes('efectivo');
   document.getElementById('mp-transferencia').checked = (data.metodos_pago || []).includes('transferencia');
   document.getElementById('moneda-recargo').value = data.recargo_transferencia || 0;
+  document.getElementById('moneda-aplica-domicilio').checked = data.aplica_domicilio !== false; // por defecto true
   document.getElementById('moneda-modal-titulo').textContent = 'Editar moneda';
   new bootstrap.Modal(document.getElementById('monedaModal')).show();
 };
@@ -102,10 +109,11 @@ async function guardarMoneda() {
   if (document.getElementById('mp-efectivo').checked) metodos_pago.push('efectivo');
   if (document.getElementById('mp-transferencia').checked) metodos_pago.push('transferencia');
   const recargo = parseFloat(document.getElementById('moneda-recargo').value) || 0;
+  const aplica_domicilio = document.getElementById('moneda-aplica-domicilio').checked;
 
   if (!codigo || !nombre) { alert('Código y nombre son obligatorios'); return; }
 
-  const datos = { codigo, nombre, metodos_pago, recargo_transferencia: recargo };
+  const datos = { codigo, nombre, metodos_pago, recargo_transferencia: recargo, aplica_domicilio };
 
   if (id) {
     const { error } = await window.guajiroPC.from('monedas').update(datos).eq('id', id);
@@ -117,4 +125,4 @@ async function guardarMoneda() {
 
   bootstrap.Modal.getInstance(document.getElementById('monedaModal')).hide();
   cargarMonedas();
-    }
+}

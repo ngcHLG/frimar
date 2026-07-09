@@ -1,6 +1,45 @@
 // js/carrito.js
 // Funciones de gestión del carrito
 
+function actualizarCantidadManual(index, inputObj) {
+  const val = parseInt(inputObj.value);
+  const item = carrito[index];
+
+  // Determinar la cantidad mínima según el producto (no aplica a combos)
+  let min = 1;
+  if (!item.esCombo) {
+    const producto = todosProductos.find(p => p.id === item.id);
+    if (producto) min = obtenerCantidadMinima(producto);
+  }
+
+  // Si el valor es inválido o menor que 1
+  if (isNaN(val) || val < 1) {
+    if (min > 1) {
+      // Si el mínimo es mayor que 1, ajustamos al mínimo en lugar de eliminar
+      carrito[index].cantidad = min;
+      inputObj.value = min;
+      actualizarCarrito();
+    } else {
+      // Si el mínimo es 1, eliminamos como antes
+      eliminarDelCarrito(index);
+    }
+    return;
+  }
+
+  // Si el valor es menor que el mínimo, mostramos aviso y revertimos
+  if (val < min) {
+    document.getElementById('toast-min-text').textContent =
+      `Cantidad mínima en ${monedaActiva}: ${min}`;
+    new bootstrap.Toast(document.getElementById('toastCantidadMinima')).show();
+    inputObj.value = item.cantidad;   // volver a la cantidad anterior
+    return;
+  }
+
+  // Valor válido
+  carrito[index].cantidad = val;
+  actualizarCarrito();
+}
+
 async function agregarComboAlCarrito(comboId) {
   const inputElem = document.getElementById(`qty-combo-${comboId}`);
   const cantidadExtraida = parseInt(inputElem.value) || 1;
@@ -28,16 +67,6 @@ async function agregarComboAlCarrito(comboId) {
   }
   inputElem.value = 1;
   actualizarCarrito();
-}
-
-function actualizarCantidadManual(index, inputObj) {
-  const val = parseInt(inputObj.value);
-  if (isNaN(val) || val < 1) {
-    eliminarDelCarrito(index);
-  } else {
-    carrito[index].cantidad = val;
-    actualizarCarrito();
-  }
 }
 
 function actualizarCarrito() {

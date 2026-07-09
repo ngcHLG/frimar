@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     localStorage.setItem('frimar-theme', tema);
   }
 
-  // Recuperar tema guardado
   const temaGuardado = localStorage.getItem('frimar-theme') || 'light';
   aplicarTema(temaGuardado);
 
@@ -25,10 +24,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const actual = document.documentElement.getAttribute('data-theme');
     aplicarTema(actual === 'light' ? 'dark' : 'light');
   });
-
-  // ── Modal checkout ────────────────────────
-  const modalEl = document.getElementById('checkoutModal');
-  if (modalEl) checkoutModalInstance = new bootstrap.Modal(modalEl);
 
   // ── Cargar datos ──────────────────────────
   await cargarMonedas();

@@ -27,7 +27,7 @@ window.productos = {
 function modalHTML() {
   return `
     <div class="modal fade" id="productoModal" tabindex="-1">
-      <div class="modal-dialog"><div class="modal-content">
+      <div class="modal-dialog modal-lg"><div class="modal-content">
         <div class="modal-header"><h5 class="modal-title" id="prod-modal-titulo">Nuevo producto</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
         <div class="modal-body">
           <input type="hidden" id="prod-id">
@@ -36,8 +36,19 @@ function modalHTML() {
           <div class="mb-3"><label class="form-label">Categoría</label><select class="form-select" id="prod-categoria"><option value="">Sin categoría</option></select></div>
           <div class="mb-3">
             <label class="form-label">Ajustes según monedas</label>
-            <div id="monedas-ajustes-container">
-              <!-- Se llena dinámicamente -->
+            <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+              <table class="table table-borderless align-middle mb-0" style="min-width: 450px;">
+                <thead>
+                  <tr>
+                    <th style="width: 100px;">Moneda</th>
+                    <th style="min-width: 130px;">Precio</th>
+                    <th style="width: 110px;">Cant. mín.</th>
+                  </tr>
+                </thead>
+                <tbody id="monedas-ajustes-container">
+                  <!-- dinámico -->
+                </tbody>
+              </table>
             </div>
           </div>
           <div class="mb-3"><label class="form-label">Foto</label><input type="file" class="form-control" id="prod-foto" accept="image/*"><img id="preview-foto" src="" class="mt-2 d-none" style="width:100px;height:100px;object-fit:cover;border-radius:4px;"></div>
@@ -52,29 +63,35 @@ function modalHTML() {
 }
 
 async function llenarMonedasAjustes(preciosExistentes = {}) {
-  const container = document.getElementById('monedas-ajustes-container');
-  if (!container) return;
+  const tbody = document.getElementById('monedas-ajustes-container');
+  if (!tbody) return;
 
   const { data: monedas, error } = await window.guajiroPC.from('monedas').select('codigo').eq('activo', true).order('codigo');
   if (error || !monedas) {
-    container.innerHTML = '<p class="text-muted">No hay monedas disponibles.</p>';
+    tbody.innerHTML = '<tr><td colspan="3" class="text-muted">No hay monedas disponibles.</td></tr>';
     return;
   }
 
-  container.innerHTML = monedas.map(m => {
+  tbody.innerHTML = monedas.map(m => {
     const datos = preciosExistentes[m.codigo] || {};
     const checked = datos.precio !== undefined ? 'checked' : '';
     const precioValor = datos.precio || '';
     const cantidadMinima = datos.min || 1;
     return `
-      <div class="d-flex align-items-center gap-2 mb-2">
-        <div class="form-check">
-          <input class="form-check-input moneda-check" type="checkbox" id="moneda-${m.codigo}" value="${m.codigo}" ${checked} onchange="toggleAjusteMoneda('${m.codigo}')">
-          <label class="form-check-label" for="moneda-${m.codigo}">${m.codigo}</label>
-        </div>
-        <input type="number" step="0.01" min="0" class="form-control form-control-sm" id="precio-${m.codigo}" value="${precioValor}" style="width: 100px;" ${checked ? '' : 'disabled'}>
-        <input type="number" step="1" min="1" class="form-control form-control-sm" id="min-${m.codigo}" value="${cantidadMinima}" style="width: 70px;" ${checked ? '' : 'disabled'}>
-      </div>
+      <tr>
+        <td>
+          <div class="form-check">
+            <input class="form-check-input moneda-check" type="checkbox" id="moneda-${m.codigo}" value="${m.codigo}" ${checked} onchange="toggleAjusteMoneda('${m.codigo}')">
+            <label class="form-check-label" for="moneda-${m.codigo}">${m.codigo}</label>
+          </div>
+        </td>
+        <td>
+          <input type="number" step="0.01" min="0" class="form-control form-control-sm" id="precio-${m.codigo}" value="${precioValor}" style="width: 100%; min-width: 90px;" ${checked ? '' : 'disabled'}>
+        </td>
+        <td>
+          <input type="number" step="1" min="1" class="form-control form-control-sm" id="min-${m.codigo}" value="${cantidadMinima}" style="width: 100%; min-width: 80px;" ${checked ? '' : 'disabled'}>
+        </td>
+      </tr>
     `;
   }).join('');
 }
@@ -106,7 +123,6 @@ async function cargarProductos() {
       if (typeof info === 'object') {
         return `${moneda}: ${info.precio} (mín. ${info.min || 1})`;
       } else {
-        // compatibilidad hacia atrás: precio simple
         return `${moneda}: ${parseFloat(info).toFixed(2)}`;
       }
     }).join(' · ') || 'Sin precios';
@@ -214,7 +230,6 @@ window.productos.editar = async function(id) {
   document.getElementById('prod-categoria').value = data.categoria_id || '';
   document.getElementById('prod-extras').checked = data.permite_extras;
 
-  // Convertir precios antiguos a nuevo formato si es necesario
   const precios = data.precios || {};
   const preciosConvertidos = {};
   Object.keys(precios).forEach(moneda => {

@@ -326,7 +326,7 @@ function renderProductos() {
           <p class="card-text small text-muted flex-grow-1">${p.descripcion || ''}</p>
           <div class="precio-text mb-3">${obtenerPrecioProducto(p)}</div>
           <div class="d-flex gap-2 align-items-center">
-            <input type="number" id="qty-${p.id}" class="form-control qty-input" style="width: 70px;" min="${obtenerCantidadMinima(p)}" value="${obtenerCantidadMinima(p)}" onblur="validarCantidadMinima(this, ${obtenerCantidadMinima(p)})" ${!horarioAbierto ? 'disabled' : ''}>
+            <input type="number" id="qty-${p.id}" class="form-control qty-input" style="width: 70px;" min="${obtenerCantidadMinima(p)}" value="${obtenerCantidadMinima(p)}" ${!horarioAbierto ? 'disabled' : ''}>
             <button class="btn btn-accent flex-grow-1" onclick="agregarAlCarrito('${p.id}')" ${!horarioAbierto ? 'disabled' : ''}>
               Añadir
             </button>
@@ -335,12 +335,6 @@ function renderProductos() {
       </div>
     </div>
   `).join('');
-}
-
-function validarCantidadMinima(input, min) {
-  if (parseInt(input.value) < min || isNaN(parseInt(input.value))) {
-    input.value = min;
-  }
 }
 
 // ─── Agregar al carrito con aviso de cantidad mínima ───

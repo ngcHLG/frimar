@@ -9,12 +9,12 @@ async function cargarMonedas() {
   } else {
     monedasDisponibles = ['CUP'];
   }
-  const savedCurrency = localStorage.getItem('guajiro-currency');
+  const savedCurrency = localStorage.getItem('frimar-currency');
   if (savedCurrency && monedasDisponibles.includes(savedCurrency)) {
     monedaActiva = savedCurrency;
   } else {
     monedaActiva = monedasDisponibles[0];
-    localStorage.setItem('guajiro-currency', monedaActiva);
+    localStorage.setItem('frimar-currency', monedaActiva);
   }
   document.getElementById('current-currency-label').textContent = monedaActiva;
   generarBotonesMoneda();
@@ -53,7 +53,7 @@ function inyectarModalCambioMoneda() {
     actualizarCarrito();
 
     monedaActiva = codigoPendiente;
-    localStorage.setItem('guajiro-currency', codigoPendiente);
+    localStorage.setItem('frimar-currency', codigoPendiente);
     document.getElementById('current-currency-label').textContent = codigoPendiente;
     generarBotonesMoneda();
     document.getElementById('moneda-list').classList.remove('show');
@@ -89,7 +89,7 @@ function cambiarMoneda(codigo) {
   }
 
   monedaActiva = codigo;
-  localStorage.setItem('guajiro-currency', codigo);
+  localStorage.setItem('frimar-currency', codigo);
   document.getElementById('current-currency-label').textContent = codigo;
   generarBotonesMoneda();
   document.getElementById('moneda-list').classList.remove('show');
@@ -238,7 +238,6 @@ async function cargarRepartosEnvio() {
   });
 }
 
-// Función llamada cuando se selecciona un reparto del input
 window.seleccionarReparto = function(nombreReparto) {
   const reparto = window._repartosData?.find(r => r.nombre === nombreReparto);
   if (reparto) {
@@ -257,9 +256,9 @@ window.seleccionarReparto = function(nombreReparto) {
 // ─── Renderizado ─────────────────────────
 function renderCategorias() {
   const container = document.getElementById('categorias-container');
-  let html = `<button class="btn-categoria active" onclick="filtrarPorCategoria('todas', this)">Todo</button>`;
+  let html = `<button class="btn-categoria active" onclick="filtrarPorCategoria('todas', this)">Inventario Completo</button>`;
   if (hayCombosActivos) {
-    html += `<button class="btn-categoria" onclick="filtrarPorCategoria('combos', this)">Combos</button>`;
+    html += `<button class="btn-categoria" onclick="filtrarPorCategoria('combos', this)">Lotes (Combos)</button>`;
   }
   const categoriasConProductos = todasCategorias.filter(cat =>
     todosProductos.some(prod => prod.categoria_id === cat.id && obtenerPrecioNumerico(prod) > 0)
@@ -279,11 +278,23 @@ function filtrarPorCategoria(catId, el) {
 
 function obtenerPrecioNumerico(producto) {
   const precios = producto.precios || {};
-  if (precios[monedaActiva] !== undefined && precios[monedaActiva] !== null) {
-    const val = parseFloat(precios[monedaActiva]);
+  const info = precios[monedaActiva];
+  if (!info) return null;
+  if (typeof info === 'object') {
+    return (!isNaN(info.precio) && info.precio > 0) ? parseFloat(info.precio) : null;
+  } else {
+    const val = parseFloat(info);
     return (!isNaN(val) && val > 0) ? val : null;
   }
-  return null;
+}
+
+function obtenerCantidadMinima(producto) {
+  const precios = producto.precios || {};
+  const info = precios[monedaActiva];
+  if (typeof info === 'object' && info.min) {
+    return parseInt(info.min) || 1;
+  }
+  return 1;
 }
 
 function obtenerPrecioProducto(producto) {
@@ -315,7 +326,7 @@ function renderProductos() {
           <p class="card-text small text-muted flex-grow-1">${p.descripcion || ''}</p>
           <div class="precio-text mb-3">${obtenerPrecioProducto(p)}</div>
           <div class="d-flex gap-2 align-items-center">
-            <input type="number" id="qty-${p.id}" class="form-control qty-input" style="width: 70px;" min="1" value="1" ${!horarioAbierto ? 'disabled' : ''}>
+            <input type="number" id="qty-${p.id}" class="form-control qty-input" style="width: 70px;" min="${obtenerCantidadMinima(p)}" value="${obtenerCantidadMinima(p)}" ${!horarioAbierto ? 'disabled' : ''}>
             <button class="btn btn-accent flex-grow-1" onclick="agregarAlCarrito('${p.id}')" ${!horarioAbierto ? 'disabled' : ''}>
               Añadir
             </button>
@@ -445,4 +456,4 @@ async function verificarHorario() {
 
   document.getElementById('horario-aviso').classList.toggle('d-none', horarioAbierto);
   document.getElementById('horario-texto').textContent = textoHorario;
-      }
+}

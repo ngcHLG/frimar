@@ -15,12 +15,10 @@ function actualizarCantidadManual(index, inputObj) {
   // Si el valor es inválido o menor que 1
   if (isNaN(val) || val < 1) {
     if (min > 1) {
-      // Si el mínimo es mayor que 1, ajustamos al mínimo en lugar de eliminar
       carrito[index].cantidad = min;
       inputObj.value = min;
       actualizarCarrito();
     } else {
-      // Si el mínimo es 1, eliminamos como antes
       eliminarDelCarrito(index);
     }
     return;

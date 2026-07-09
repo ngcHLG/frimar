@@ -1,13 +1,14 @@
+// secciones/pedidos.js
 window.pedidos = {
   init: async function(container) {
     container.innerHTML = `
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 style="color: var(--text-main);"><i class="bi bi-receipt"></i> Pedidos</h2>
-        <div class="d-flex gap-2 align-items-center">
-          <button class="btn btn-outline-accent btn-sm" id="btn-seleccionar-todos" onclick="window.pedidos.seleccionarTodos()">
+        <div class="d-flex flex-nowrap align-items-center gap-2 overflow-auto" style="max-width: 100%; scrollbar-width: none;">
+          <button class="btn btn-outline-accent btn-sm text-nowrap" id="btn-seleccionar-todos" onclick="window.pedidos.seleccionarTodos()">
             <i class="bi bi-check-square"></i> <span>Seleccionar todos</span>
           </button>
-          <button id="btn-eliminar-seleccionados" class="btn btn-outline-danger btn-sm d-none" onclick="window.pedidos.eliminarSeleccionados()">
+          <button id="btn-eliminar-seleccionados" class="btn btn-outline-danger btn-sm text-nowrap d-none" onclick="window.pedidos.eliminarSeleccionados()">
             <i class="bi bi-trash"></i> Eliminar (<span id="cantidad-seleccionados">0</span>)
           </button>
         </div>
@@ -17,7 +18,6 @@ window.pedidos = {
     `;
 
     this.seleccionados = new Set();
-
     await pedidosCargar();
     this.interval = setInterval(pedidosCargar, 30000);
   },
@@ -58,6 +58,15 @@ async function pedidosCargar() {
   cont.innerHTML = data.map(p => {
     const items = Array.isArray(p.items) ? p.items : [];
     const estaSeleccionado = window.pedidos.seleccionados.has(p.id);
+    const puedeConfirmar = p.estado === 'pendiente';
+    const puedeEntregar = p.estado === 'confirmado';
+    const puedeCancelar = p.estado === 'pendiente' || p.estado === 'confirmado';
+    const badgeClass = {
+      pendiente: 'warning',
+      confirmado: 'info',
+      entregado: 'success',
+      cancelado: 'danger'
+    }[p.estado] || 'secondary';
 
     return `
     <div class="list-item" style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; padding:0.8rem 1rem; margin-bottom:0.8rem; display:flex; align-items:flex-start; gap:0.8rem;">
@@ -77,9 +86,11 @@ async function pedidosCargar() {
           <strong>${parseFloat(p.total).toFixed(2)} ${p.moneda || 'CUP'}</strong>
         </div>
         <div class="mt-2">${items.map(i => `<span class="badge bg-secondary me-1">${i.cantidad}x ${i.nombre}</span>`).join('')}</div>
-        <div class="mt-2">
-          <span class="badge bg-${p.estado === 'pendiente' ? 'warning' : p.estado === 'confirmado' ? 'info' : p.estado === 'preparado' ? 'primary' : 'success'}">${p.estado}</span>
-          ${p.estado !== 'entregado' ? `<button class="btn btn-sm btn-outline-accent ms-2" onclick="window.pedidos.avanzar('${p.id}', '${p.estado}')"><i class="bi bi-arrow-right-circle"></i></button>` : ''}
+        <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
+          <span class="badge bg-${badgeClass}">${p.estado}</span>
+          ${puedeConfirmar ? `<button class="btn btn-sm btn-outline-accent" onclick="window.pedidos.confirmar('${p.id}')"><i class="bi bi-check-circle"></i> Confirmar</button>` : ''}
+          ${puedeEntregar ? `<button class="btn btn-sm btn-outline-accent" onclick="window.pedidos.entregar('${p.id}')"><i class="bi bi-box-seam"></i> Entregado</button>` : ''}
+          ${puedeCancelar ? `<button class="btn btn-sm btn-outline-danger" onclick="window.pedidos.cancelar('${p.id}')"><i class="bi bi-x-circle"></i> Cancelar</button>` : ''}
         </div>
       </div>
     </div>`;
@@ -89,6 +100,7 @@ async function pedidosCargar() {
   window.pedidos.actualizarBotonSeleccionarTodos();
 }
 
+// ─── Selección y eliminación ───
 window.pedidos.togglePedido = function(id, boton) {
   if (window.pedidos.seleccionados.has(id)) {
     window.pedidos.seleccionados.delete(id);
@@ -108,7 +120,6 @@ window.pedidos.togglePedido = function(id, boton) {
 window.pedidos.seleccionarTodos = function() {
   const totalPedidos = document.querySelectorAll('#pedidos-lista .list-item').length;
   if (window.pedidos.seleccionados.size === totalPedidos && totalPedidos > 0) {
-    // Desmarcar todos
     window.pedidos.seleccionados.clear();
     document.querySelectorAll('#pedidos-lista .list-item button').forEach(btn => {
       btn.classList.remove('btn-accent');
@@ -116,7 +127,6 @@ window.pedidos.seleccionarTodos = function() {
       btn.querySelector('i').className = 'bi bi-square';
     });
   } else {
-    // Marcar todos
     document.querySelectorAll('#pedidos-lista .list-item').forEach(item => {
       const btn = item.querySelector('button');
       const id = btn.getAttribute('onclick').match(/'([^']+)'/)[1];
@@ -159,32 +169,37 @@ window.pedidos.actualizarBotonSeleccionarTodos = function() {
 
 window.pedidos.eliminarSeleccionados = function() {
   if (window.pedidos.seleccionados.size === 0) return;
-
   const modalEl = document.getElementById('confirmarEliminarModal');
   const mensaje = document.getElementById('confirmar-mensaje');
   mensaje.textContent = `¿Eliminar ${window.pedidos.seleccionados.size} pedido(s)?`;
   const modal = new bootstrap.Modal(modalEl);
   modal.show();
-
   document.getElementById('btn-confirmar-eliminar').onclick = async () => {
     modal.hide();
     const ids = [...window.pedidos.seleccionados];
     const { error } = await window.guajiroPC.from('pedidos').delete().in('id', ids);
-
     if (error) {
       alert('Error al eliminar: ' + error.message);
       return;
     }
-
     window.pedidos.seleccionados.clear();
     pedidosCargar();
   };
 };
 
-window.pedidos.avanzar = async function(id, estado) {
-  const siguiente = { 'pendiente': 'confirmado', 'confirmado': 'preparado', 'preparado': 'entregado' };
-  if (siguiente[estado]) {
-    await window.guajiroPC.from('pedidos').update({ estado: siguiente[estado] }).eq('id', id);
-    pedidosCargar();
-  }
+// ─── Cambios de estado ───
+window.pedidos.confirmar = async function(id) {
+  await window.guajiroPC.from('pedidos').update({ estado: 'confirmado' }).eq('id', id);
+  pedidosCargar();
+};
+
+window.pedidos.entregar = async function(id) {
+  await window.guajiroPC.from('pedidos').update({ estado: 'entregado' }).eq('id', id);
+  pedidosCargar();
+};
+
+window.pedidos.cancelar = async function(id) {
+  if (!confirm('¿Cancelar este pedido?')) return;
+  await window.guajiroPC.from('pedidos').update({ estado: 'cancelado' }).eq('id', id);
+  pedidosCargar();
 };

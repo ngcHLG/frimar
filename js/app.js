@@ -7,23 +7,30 @@
 })();
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Tema
+  // ── Tema con persistencia ─────────────────
   const btnThemeToggle = document.getElementById('btn-theme-toggle');
   const themeIcon = document.getElementById('theme-icon');
 
+  function aplicarTema(tema) {
+    document.documentElement.setAttribute('data-theme', tema);
+    themeIcon.className = tema === 'light' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
+    localStorage.setItem('frimar-theme', tema);
+  }
+
+  // Recuperar tema guardado
+  const temaGuardado = localStorage.getItem('frimar-theme') || 'light';
+  aplicarTema(temaGuardado);
+
   btnThemeToggle.addEventListener('click', () => {
-    const root = document.documentElement;
-    const currentTheme = root.getAttribute('data-theme');
-    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-    root.setAttribute('data-theme', newTheme);
-    themeIcon.className = newTheme === 'light' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
+    const actual = document.documentElement.getAttribute('data-theme');
+    aplicarTema(actual === 'light' ? 'dark' : 'light');
   });
 
-  // Modal checkout
+  // ── Modal checkout ────────────────────────
   const modalEl = document.getElementById('checkoutModal');
   if (modalEl) checkoutModalInstance = new bootstrap.Modal(modalEl);
 
-  // Cargar datos
+  // ── Cargar datos ──────────────────────────
   await cargarMonedas();
   await cargarConfiguracion();
   await cargarCategorias();

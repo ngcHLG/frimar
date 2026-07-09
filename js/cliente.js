@@ -356,7 +356,11 @@ function agregarAlCarrito(idProducto) {
   if (!precioActual) return;
 
   const min = obtenerCantidadMinima(producto);
-  if (cantidadDeseada < min) {
+  const grupo = carrito.find(item => item.id === idProducto && !item.esCombo);
+  const cantidadYaEnCarrito = grupo ? grupo.cantidad : 0;
+  const cantidadTotal = cantidadYaEnCarrito + cantidadDeseada;
+
+  if (cantidadTotal < min) {
     // Mostrar toast explicativo y no añadir
     document.getElementById('toast-min-text').textContent =
       `Debes comprar al menos ${min} unidades de ${producto.nombre} en ${monedaActiva}.`;
@@ -365,7 +369,6 @@ function agregarAlCarrito(idProducto) {
     return; // No se añade nada al carrito
   }
 
-  const grupo = carrito.find(item => item.id === idProducto && !item.esCombo);
   if (grupo) {
     grupo.cantidad += cantidadDeseada;
   } else {
@@ -505,3 +508,4 @@ async function verificarHorario() {
   document.getElementById('horario-aviso').classList.toggle('d-none', horarioAbierto);
   document.getElementById('horario-texto').textContent = textoHorario;
 }
+

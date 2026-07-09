@@ -1,59 +1,6 @@
 // js/carrito.js
 // Funciones de gestión del carrito
 
-function agregarAlCarrito(idProducto) {
-  const producto = todosProductos.find(p => p.id === idProducto);
-  if (!producto) return;
-
-  const inputElem = document.getElementById(`qty-${idProducto}`);
-  let cantidadDeseada = parseInt(inputElem.value) || 1;
-  if (cantidadDeseada < 1) cantidadDeseada = 1;
-
-  const precioActual = obtenerPrecioNumerico(producto);
-  if (!precioActual) return;
-
-  const min = obtenerCantidadMinima(producto);
-  if (cantidadDeseada < min) {
-    // Mostrar toast de aviso sin añadir nada al carrito
-    mostrarToast(`Cantidad mínima en ${monedaActiva}: ${min}`);
-    inputElem.value = min; // corregir el campo visual
-    return;                // NO se agrega al carrito
-  }
-
-  const grupo = carrito.find(item => item.id === idProducto && !item.esCombo);
-  if (grupo) {
-    grupo.cantidad += cantidadDeseada;
-  } else {
-    carrito.push({
-      id: producto.id,
-      nombre: producto.nombre,
-      precio: precioActual,
-      moneda: monedaActiva,
-      permiteExtras: producto.permite_extras,
-      cantidad: cantidadDeseada,
-      extras: '',
-      esCombo: false,
-      items: null
-    });
-  }
-  inputElem.value = min;
-  actualizarCarrito();
-}
-
-// Función para mostrar un toast reutilizando el existente
-function mostrarToast(mensaje) {
-  const toastEl = document.getElementById('toastPedido');
-  // Cambiar el contenido del toast
-  const msgDiv = toastEl.querySelector('.toast-body');
-  if (msgDiv) {
-    msgDiv.innerHTML = `<div><strong>Aviso</strong><br><small>${mensaje}</small></div>`;
-  }
-  // Mostrar el toast
-  toastEl.style.display = 'block';
-  const toast = new bootstrap.Toast(toastEl);
-  toast.show();
-}
-
 async function agregarComboAlCarrito(comboId) {
   const inputElem = document.getElementById(`qty-combo-${comboId}`);
   const cantidadExtraida = parseInt(inputElem.value) || 1;

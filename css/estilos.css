@@ -426,3 +426,7 @@ h1, h2, h3, h4, h5, .navbar-brand, .card-title, .offcanvas-title {
   .toast-line-1 { font-size: 0.8rem; }
   .toast-line-2 { font-size: 0.7rem; }
 }
+
+.text-muted {
+  color: var(--text-muted) !important;
+}

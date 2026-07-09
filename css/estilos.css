@@ -388,3 +388,52 @@ h1, h2, h3, h4, h5, .navbar-brand, .card-title, .offcanvas-title {
   .toast-line-1 { font-size: 0.8rem; }
   .toast-line-2 { font-size: 0.7rem; }
 }
+
+/* Variables para la pantalla de carga (translúcido por modo) */
+[data-theme="light"] { --splash-bg: rgba(242, 242, 242, 0.85); }
+[data-theme="dark"]  { --splash-bg: rgba(13, 17, 27, 0.85);   }
+
+/* Pantalla de carga */
+.splash {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-color: var(--splash-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease;
+}
+.splash-content {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+.splash-logo {
+  height: 100px;
+  width: 100px;
+  object-fit: contain;
+}
+.splash-title {
+  font-size: 3.5rem;
+  font-weight: bold;
+  color: var(--text-main);
+  line-height: 1.1;
+}
+.splash-slogan {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Ajuste para pantallas pequeñas */
+@media (max-width: 500px) {
+  .splash-content { gap: 1rem; }
+  .splash-logo { height: 70px; width: 70px; }
+  .splash-title { font-size: 2.2rem; }
+  .splash-slogan { font-size: 0.9rem; }
+}

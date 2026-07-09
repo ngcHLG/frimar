@@ -170,17 +170,14 @@
   </div>
 
     <!-- Contenedor Toasts -->
-  <div class="toast-container position-fixed bottom-0 start-50 translate-middle-x p-3" style="z-index: 1060">
-    <div id="toastPedido" class="toast align-items-center" role="alert" data-bs-delay="4000" style="min-width: 280px; max-width: 90vw; background-color: rgba(0,0,0,0.75); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); color: #fff;">
-      <div class="d-flex">
-        <div class="toast-body d-flex align-items-center gap-2">
-          <img src="icon_regular_small.png" alt="GUAJIRO" style="height: 28px; width: 28px; object-fit: contain;">
-          <div>
-            <strong class="toast-line-1">Pedido realizado con éxito</strong><br>
-            <small class="toast-line-2" style="color: #FCE029;">¡GRACIAS POR CONTAR CON NOSOTROS!</small>
-          </div>
+  <div aria-live="polite" aria-atomic="true" style="position: fixed; bottom: 20px; left: 20px; right: 20px; z-index: 1060; display: flex; justify-content: center; pointer-events: none;">
+    <div id="toastPedido" class="toast align-items-center" role="alert" data-bs-delay="4000" style="display: none; width: auto; max-width: 90vw; min-width: 280px; pointer-events: auto; background-color: rgba(20,20,20,0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); border-radius: 0.8rem; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+      <div class="d-flex" style="padding: 1rem;">
+        <img src="icon_regular_small.png" alt="GUAJIRO" style="height: 28px; width: 28px; object-fit: contain; margin-right: 0.75rem; flex-shrink: 0;">
+        <div style="overflow: hidden;">
+          <div style="font-weight: bold; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff;">Pedido realizado con éxito</div>
+          <div style="font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #FCE029;">¡GRACIAS POR CONTAR CON NOSOTROS!</div>
         </div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
       </div>
     </div>
   </div>

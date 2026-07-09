@@ -435,3 +435,14 @@ h1, h2, h3, h4, h5, .navbar-brand, .card-title, .offcanvas-title {
 #monedas-ajustes-container .d-flex {
   flex-wrap: nowrap;
 }
+
+/* Forzar fondo y texto del resumen de precios en el offcanvas */
+.offcanvas .bg-body {
+  background-color: var(--bg-surface) !important;
+  color: var(--text-main);
+}
+
+/* Asegurar que los textos muted dentro del resumen usen nuestro color secundario */
+.offcanvas .bg-body .text-muted {
+  color: var(--text-secondary) !important;
+}

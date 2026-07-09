@@ -343,46 +343,6 @@ function validarCantidadMinima(input, min) {
   }
 }
 
-function agregarAlCarrito(idProducto) {
-  const producto = todosProductos.find(p => p.id === idProducto);
-  if (!producto) return;
-
-  const inputElem = document.getElementById(`qty-${idProducto}`);
-  let cantidadDeseada = parseInt(inputElem.value) || 1;
-  if (cantidadDeseada < 1) cantidadDeseada = 1;
-
-  const precioActual = obtenerPrecioNumerico(producto);
-  if (!precioActual) return;
-
-  const min = obtenerCantidadMinima(producto);
-  if (cantidadDeseada < min) {
-    // Mostrar toast explicativo y no añadir
-    document.getElementById('toast-min-text').textContent =
-      `Debes comprar al menos ${min} unidades de ${producto.nombre} en ${monedaActiva}.`;
-    new bootstrap.Toast(document.getElementById('toastCantidadMinima')).show();
-    return; // No se añade nada al carrito
-  }
-
-  const grupo = carrito.find(item => item.id === idProducto && !item.esCombo);
-  if (grupo) {
-    grupo.cantidad += cantidadDeseada;
-  } else {
-    carrito.push({
-      id: producto.id,
-      nombre: producto.nombre,
-      precio: precioActual,
-      moneda: monedaActiva,
-      permiteExtras: producto.permite_extras,
-      cantidad: cantidadDeseada,
-      extras: '',
-      esCombo: false,
-      items: null
-    });
-  }
-  inputElem.value = min;
-  actualizarCarrito();
-}
-
 // ─── Combos con monedas ──────────────────
 async function obtenerPrecioCombo(comboId) {
   const { data: combo, error: errCombo } = await supabaseClient

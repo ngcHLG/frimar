@@ -103,7 +103,6 @@ function actualizarCarrito() {
   document.getElementById('subtotal-carrito').textContent = subtotal.toFixed(2);
   document.getElementById('subtotal-moneda').textContent = monedaActiva;
 
-  // Usamos la variable global metodoPagoActivo
   let recargo = 0;
   if (metodoPagoActivo === 'transferencia' && recargoTransferencia > 0) {
     recargo = subtotal * (recargoTransferencia / 100);
@@ -114,16 +113,15 @@ function actualizarCarrito() {
     document.getElementById('recargo-desglose').classList.add('d-none');
   }
 
-  // Envío: siempre en CUP
   const repartoInput = document.getElementById('reparto-input');
   let envio = 0;
-  if (repartoInput && repartoInput.dataset.precio) {
+  if (aplicaDomicilio && repartoInput && repartoInput.dataset.precio) {
     envio = parseFloat(repartoInput.dataset.precio);
   }
 
   const envioCUP = document.getElementById('envio-cup-desglose');
   const envioDesglose = document.getElementById('envio-desglose');
-  if (envio > 0) {
+  if (envio > 0 && aplicaDomicilio) {
     if (monedaActiva === 'CUP') {
       document.getElementById('envio-aplicado').textContent = envio.toFixed(2);
       document.getElementById('envio-moneda').textContent = 'CUP';
@@ -139,9 +137,8 @@ function actualizarCarrito() {
     envioCUP.classList.add('d-none');
   }
 
-  // Total en moneda activa: subtotal + recargo (+ envío si moneda es CUP)
   let total = subtotal + recargo;
-  if (monedaActiva === 'CUP' && envio > 0) {
+  if (monedaActiva === 'CUP' && aplicaDomicilio && envio > 0) {
     total += envio;
   }
 
@@ -152,9 +149,9 @@ function actualizarCarrito() {
   badge.textContent = conteoGlobal;
   badge.style.display = conteoGlobal > 0 ? 'flex' : 'none';
 
-  // Habilitar checkout si hay productos y se ha seleccionado reparto (si hay repartos disponibles)
+  const necesitaReparto = aplicaDomicilio && window._repartosData?.length > 0;
   const repartoSeleccionado = repartoInput && repartoInput.dataset.precio;
-  btnCheckout.disabled = carrito.length === 0 || (window._repartosData?.length > 0 && !repartoSeleccionado);
+  btnCheckout.disabled = carrito.length === 0 || (necesitaReparto && !repartoSeleccionado);
 }
 
 function actualizarExtras(index, valor) {
@@ -164,4 +161,4 @@ function actualizarExtras(index, valor) {
 function eliminarDelCarrito(index) {
   carrito.splice(index, 1);
   actualizarCarrito();
-                                     }
+                                  }

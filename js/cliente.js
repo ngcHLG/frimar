@@ -257,9 +257,9 @@ window.seleccionarReparto = function(nombreReparto) {
 // ─── Renderizado ─────────────────────────
 function renderCategorias() {
   const container = document.getElementById('categorias-container');
-  let html = `<button class="btn-categoria active" onclick="filtrarPorCategoria('todas', this)">Inventario Completo</button>`;
+  let html = `<button class="btn-categoria active" onclick="filtrarPorCategoria('todas', this)">Todo</button>`;
   if (hayCombosActivos) {
-    html += `<button class="btn-categoria" onclick="filtrarPorCategoria('combos', this)">Lotes (Combos)</button>`;
+    html += `<button class="btn-categoria" onclick="filtrarPorCategoria('combos', this)">Combos</button>`;
   }
   const categoriasConProductos = todasCategorias.filter(cat =>
     todosProductos.some(prod => prod.categoria_id === cat.id && obtenerPrecioNumerico(prod) > 0)

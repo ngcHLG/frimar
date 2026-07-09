@@ -20,16 +20,26 @@
 </head>
 <body>
    
-  <!-- Pantalla de carga FRIMAR -->
+   <!-- Pantalla de carga TRIMAR -->
   <div id="splash-screen" class="splash">
     <div class="splash-content">
       <img src="icon_regular_small.png" alt="TRIMAR" class="splash-logo">
       <div class="splash-text">
-        <div class="splash-title">FRIMAR</div>
+        <div class="splash-title">TRIMAR</div>
         <div class="splash-slogan">"Sabor que se conserva, calidad que se recuerda"</div>
       </div>
     </div>
   </div>
+  <script>
+    // Ocultar pantalla de carga después de 2 segundos
+    setTimeout(function() {
+      var splash = document.getElementById('splash-screen');
+      if (splash) {
+        splash.style.opacity = '0';
+        setTimeout(function() { splash.remove(); }, 500);
+      }
+    }, 2000);
+  </script>
   
   <!-- Navegación -->
   <nav class="navbar navbar-dark sticky-top py-3">

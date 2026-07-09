@@ -5,7 +5,7 @@ function actualizarCantidadManual(index, inputObj) {
   const val = parseInt(inputObj.value);
   const item = carrito[index];
 
-  // Determinar la cantidad mínima según el producto (no aplica a combos)
+  // Determinar la cantidad mínima (solo para productos, no combos)
   let min = 1;
   if (!item.esCombo) {
     const producto = todosProductos.find(p => p.id === item.id);
@@ -24,12 +24,11 @@ function actualizarCantidadManual(index, inputObj) {
     return;
   }
 
-  // Si el valor es menor que el mínimo, mostramos aviso y revertimos
+  // Si el valor es menor que el mínimo, lo ajustamos sin avisar
   if (val < min) {
-    document.getElementById('toast-min-text').textContent =
-      `Cantidad mínima en ${monedaActiva}: ${min}`;
-    new bootstrap.Toast(document.getElementById('toastCantidadMinima')).show();
-    inputObj.value = item.cantidad;   // volver a la cantidad anterior
+    carrito[index].cantidad = min;
+    inputObj.value = min;
+    actualizarCarrito();
     return;
   }
 

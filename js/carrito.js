@@ -13,7 +13,10 @@ function agregarAlCarrito(idProducto) {
   if (!precioActual) return;
 
   const min = obtenerCantidadMinima(producto);
-  if (cantidadDeseada < min) cantidadDeseada = min;   // simplemente se ajusta al mínimo, sin alert
+  if (cantidadDeseada < min) {
+    cantidadDeseada = min;            // se ajusta automáticamente al mínimo
+    inputElem.value = min;            // corregimos también el campo visual
+  }
 
   const grupo = carrito.find(item => item.id === idProducto && !item.esCombo);
   if (grupo) {
@@ -31,7 +34,7 @@ function agregarAlCarrito(idProducto) {
       items: null
     });
   }
-  inputElem.value = min; // reiniciar al mínimo para la siguiente compra
+  inputElem.value = min; // dejamos el campo listo para la siguiente compra
   actualizarCarrito();
 }
 
@@ -164,4 +167,4 @@ function actualizarExtras(index, valor) {
 function eliminarDelCarrito(index) {
   carrito.splice(index, 1);
   actualizarCarrito();
-}
+    }

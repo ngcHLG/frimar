@@ -25,8 +25,8 @@ async function confirmarPedido() {
   errorDiv.classList.add('d-none');
 
   const repartoInput = document.getElementById('reparto-input');
-  const zonaTexto = repartoInput?.value || 'Sin reparto';
-  const envio = parseFloat(repartoInput?.dataset.precio || 0);
+  const zonaTexto = aplicaDomicilio && repartoInput?.value ? repartoInput.value : 'No aplica envío';
+  const envio = aplicaDomicilio && repartoInput?.dataset.precio ? parseFloat(repartoInput.dataset.precio) : 0;
 
   const subtotal = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
   let recargo = 0;
@@ -34,7 +34,7 @@ async function confirmarPedido() {
     recargo = subtotal * (recargoTransferencia / 100);
   }
   let total = subtotal + recargo;
-  if (monedaActiva === 'CUP') {
+  if (monedaActiva === 'CUP' && aplicaDomicilio) {
     total += envio;
   }
 
@@ -104,4 +104,4 @@ ${productosTexto}
 
   carrito = [];
   actualizarCarrito();
-}
+    }

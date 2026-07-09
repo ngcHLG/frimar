@@ -11,7 +11,7 @@ window.productos = {
     document.getElementById('prod-foto').addEventListener('change', previewFoto);
   },
   abrirNuevo: async function() {
-    await llenarMonedasCheckboxes({});
+    await llenarMonedasAjustes({});
     document.getElementById('prod-id').value = '';
     document.getElementById('prod-nombre').value = '';
     document.getElementById('prod-descripcion').value = '';
@@ -35,9 +35,9 @@ function modalHTML() {
           <div class="mb-3"><label class="form-label">Descripción</label><textarea class="form-control" id="prod-descripcion" rows="2"></textarea></div>
           <div class="mb-3"><label class="form-label">Categoría</label><select class="form-select" id="prod-categoria"><option value="">Sin categoría</option></select></div>
           <div class="mb-3">
-            <label class="form-label">Precios por moneda</label>
-            <div id="monedas-precios-container">
-              <!-- Se llenan dinámicamente -->
+            <label class="form-label">Ajustes según monedas</label>
+            <div id="monedas-ajustes-container">
+              <!-- Se llena dinámicamente -->
             </div>
           </div>
           <div class="mb-3"><label class="form-label">Foto</label><input type="file" class="form-control" id="prod-foto" accept="image/*"><img id="preview-foto" src="" class="mt-2 d-none" style="width:100px;height:100px;object-fit:cover;border-radius:4px;"></div>
@@ -51,35 +51,44 @@ function modalHTML() {
     </div>`;
 }
 
-async function llenarMonedasCheckboxes(preciosExistentes = {}) {
-  const container = document.getElementById('monedas-precios-container');
+async function llenarMonedasAjustes(preciosExistentes = {}) {
+  const container = document.getElementById('monedas-ajustes-container');
   if (!container) return;
 
-  const { data: monedas, error } = await window.guajiroPC.from('monedas').select('*').eq('activo', true).order('codigo');
+  const { data: monedas, error } = await window.guajiroPC.from('monedas').select('codigo').eq('activo', true).order('codigo');
   if (error || !monedas) {
     container.innerHTML = '<p class="text-muted">No hay monedas disponibles.</p>';
     return;
   }
 
   container.innerHTML = monedas.map(m => {
-    const checked = preciosExistentes.hasOwnProperty(m.codigo) ? 'checked' : '';
-    const precioValor = preciosExistentes[m.codigo] || '';
+    const datos = preciosExistentes[m.codigo] || {};
+    const checked = datos.precio !== undefined ? 'checked' : '';
+    const precioValor = datos.precio || '';
+    const cantidadMinima = datos.min || 1;
     return `
-      <div class="form-check form-check-inline mb-2">
-        <input class="form-check-input moneda-check" type="checkbox" id="moneda-${m.codigo}" value="${m.codigo}" ${checked} onchange="togglePrecioMoneda('${m.codigo}')">
-        <label class="form-check-label" for="moneda-${m.codigo}">${m.codigo}</label>
-        <input type="number" step="0.01" min="0" class="form-control form-control-sm d-inline-block ms-2" id="precio-${m.codigo}" value="${precioValor}" style="width: 100px;" ${checked ? '' : 'disabled'}>
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <div class="form-check">
+          <input class="form-check-input moneda-check" type="checkbox" id="moneda-${m.codigo}" value="${m.codigo}" ${checked} onchange="toggleAjusteMoneda('${m.codigo}')">
+          <label class="form-check-label" for="moneda-${m.codigo}">${m.codigo}</label>
+        </div>
+        <input type="number" step="0.01" min="0" class="form-control form-control-sm" id="precio-${m.codigo}" value="${precioValor}" style="width: 100px;" ${checked ? '' : 'disabled'}>
+        <input type="number" step="1" min="1" class="form-control form-control-sm" id="min-${m.codigo}" value="${cantidadMinima}" style="width: 70px;" ${checked ? '' : 'disabled'}>
       </div>
     `;
   }).join('');
 }
 
-window.togglePrecioMoneda = function(codigo) {
+window.toggleAjusteMoneda = function(codigo) {
   const checkbox = document.getElementById(`moneda-${codigo}`);
   const precioInput = document.getElementById(`precio-${codigo}`);
-  if (checkbox && precioInput) {
-    precioInput.disabled = !checkbox.checked;
-    if (!checkbox.checked) precioInput.value = '';
+  const minInput = document.getElementById(`min-${codigo}`);
+  const disabled = !checkbox.checked;
+  precioInput.disabled = disabled;
+  minInput.disabled = disabled;
+  if (!checkbox.checked) {
+    precioInput.value = '';
+    minInput.value = '1';
   }
 };
 
@@ -92,9 +101,15 @@ async function cargarProductos() {
   }
   cont.innerHTML = data.map(p => {
     const precios = p.precios || {};
-    const preciosTexto = Object.keys(precios).length > 0 
-      ? Object.entries(precios).map(([moneda, valor]) => `${moneda}: ${parseFloat(valor).toFixed(2)}`).join(' · ')
-      : 'Sin precios';
+    const preciosTexto = Object.keys(precios).map(moneda => {
+      const info = precios[moneda];
+      if (typeof info === 'object') {
+        return `${moneda}: ${info.precio} (mín. ${info.min || 1})`;
+      } else {
+        // compatibilidad hacia atrás: precio simple
+        return `${moneda}: ${parseFloat(info).toFixed(2)}`;
+      }
+    }).join(' · ') || 'Sin precios';
 
     return `
     <div class="list-item" style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; padding:0.8rem 1rem; margin-bottom:0.8rem; display:flex; align-items:center; justify-content:space-between;">
@@ -148,14 +163,17 @@ async function guardar() {
   const precios = {};
   document.querySelectorAll('.moneda-check:checked').forEach(cb => {
     const moneda = cb.value;
-    const inputPrecio = document.getElementById(`precio-${moneda}`);
-    if (inputPrecio && inputPrecio.value) {
-      precios[moneda] = parseFloat(inputPrecio.value);
+    const precioInput = document.getElementById(`precio-${moneda}`);
+    const minInput = document.getElementById(`min-${moneda}`);
+    const precio = parseFloat(precioInput.value);
+    const min = parseInt(minInput.value) || 1;
+    if (precioInput.value !== '' && !isNaN(precio) && precio >= 0) {
+      precios[moneda] = { precio: precio, min: min };
     }
   });
 
   if (Object.keys(precios).length === 0) {
-    alert('Debes marcar al menos una moneda e ingresar un precio.');
+    alert('Debes marcar al menos una moneda con precio.');
     return;
   }
 
@@ -196,7 +214,19 @@ window.productos.editar = async function(id) {
   document.getElementById('prod-categoria').value = data.categoria_id || '';
   document.getElementById('prod-extras').checked = data.permite_extras;
 
-  await llenarMonedasCheckboxes(data.precios || {});
+  // Convertir precios antiguos a nuevo formato si es necesario
+  const precios = data.precios || {};
+  const preciosConvertidos = {};
+  Object.keys(precios).forEach(moneda => {
+    const valor = precios[moneda];
+    if (typeof valor === 'object') {
+      preciosConvertidos[moneda] = valor;
+    } else {
+      preciosConvertidos[moneda] = { precio: parseFloat(valor), min: 1 };
+    }
+  });
+
+  await llenarMonedasAjustes(preciosConvertidos);
 
   document.getElementById('prod-foto').value = '';
   const preview = document.getElementById('preview-foto');

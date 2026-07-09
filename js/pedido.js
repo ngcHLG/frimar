@@ -1,10 +1,13 @@
 // js/pedido.js
-// Confirmación de pedido y envío de notificación
+// Confirmación de pedido y envío de notificación (offcanvas de facturación)
 
 function configurarBotonPedido() {
+  // El botón "Proceder al Pago" ya tiene data-bs-target="#facturacionOffcanvas"
+  // pero añadimos un listener para cerrar el carrito antes
   document.getElementById('btn-checkout').addEventListener('click', () => {
     if (carrito.length === 0) return;
-    checkoutModalInstance.show();
+    const carritoOffcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('carritoOffcanvas'));
+    if (carritoOffcanvas) carritoOffcanvas.hide();
   });
 
   document.getElementById('confirmar-pedido').addEventListener('click', confirmarPedido);
@@ -15,10 +18,11 @@ async function confirmarPedido() {
   const telefono = document.getElementById('telefono').value.trim();
   const direccion = document.getElementById('direccion').value.trim();
   const referencia = document.getElementById('referencia').value.trim();
-  const errorDiv = document.getElementById('checkout-error');
+  const errorDiv = document.getElementById('facturacion-error');
+  const errorText = document.getElementById('facturacion-error-text');
 
   if (!nombre || !telefono || !direccion) {
-    document.getElementById('error-text').textContent = 'Faltan parámetros obligatorios en el formulario.';
+    errorText.textContent = 'Faltan parámetros obligatorios en el formulario.';
     errorDiv.classList.remove('d-none');
     return;
   }
@@ -62,12 +66,12 @@ async function confirmarPedido() {
   const { error: errorPedido } = await supabaseClient.from('pedidos').insert([pedidoData]);
 
   if (errorPedido) {
-    document.getElementById('error-text').textContent = 'Fallo en la transmisión de datos del pedido.';
+    errorText.textContent = 'Fallo en la transmisión de datos del pedido.';
     errorDiv.classList.remove('d-none');
     return;
   }
 
-  // ─── Notificación ntfy ─────────────────
+  // Notificación ntfy
   const productosTexto = carrito.map(item => {
     const extra = item.extras ? ` [${item.extras}]` : '';
     return `• ${item.cantidad}x ${item.nombre}${extra} — ${(item.precio * item.cantidad).toFixed(2)} ${item.moneda || monedaActiva}`;
@@ -77,7 +81,7 @@ async function confirmarPedido() {
   const envioTexto = envio > 0 ? `\n🛵 Envío: ${envio.toFixed(2)} CUP` : '';
   const envioNota = monedaActiva !== 'CUP' && envio > 0 ? '\n(El envío se cobra aparte en CUP)' : '';
 
-  const payloadNtfy = `🧾 NUEVO PEDIDO — GUAJIRO
+  const payloadNtfy = `🧾 NUEVO PEDIDO — FRIMAR
 👤 ${nombre}
 📞 ${telefono}
 📍 ${direccion}${referencia ? '\n📌 Ref: ' + referencia : ''}
@@ -89,14 +93,11 @@ ${productosTexto}
 💰 Subtotal: ${subtotal.toFixed(2)} ${monedaActiva}${recargoTexto}${envioTexto}${envioNota}
 🔻 TOTAL: ${total.toFixed(2)} ${monedaActiva}`;
 
-  fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
-    method: 'POST',
-    body: payloadNtfy
-  }).catch(() => {});
+  fetch(`https://ntfy.sh/${NTFY_TOPIC}`, { method: 'POST', body: payloadNtfy }).catch(() => {});
 
-  checkoutModalInstance.hide();
-  const offcanvasInst = bootstrap.Offcanvas.getInstance(document.getElementById('carritoOffcanvas'));
-  if (offcanvasInst) offcanvasInst.hide();
+  // Cerrar offcanvas de facturación
+  const facturacionOffcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('facturacionOffcanvas'));
+  if (facturacionOffcanvas) facturacionOffcanvas.hide();
 
   setTimeout(() => {
     new bootstrap.Toast(document.getElementById('toastPedido')).show();
@@ -104,4 +105,10 @@ ${productosTexto}
 
   carrito = [];
   actualizarCarrito();
-    }
+
+  // Limpiar formulario
+  document.getElementById('nombre').value = '';
+  document.getElementById('telefono').value = '';
+  document.getElementById('direccion').value = '';
+  document.getElementById('referencia').value = '';
+}

@@ -37,12 +37,12 @@ function modalHTML() {
           <div class="mb-3">
             <label class="form-label">Ajustes según monedas</label>
             <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
-              <table class="table table-borderless align-middle mb-0" style="min-width: 450px;">
+              <table class="table table-borderless align-middle mb-0" style="width: auto;">
                 <thead>
                   <tr>
-                    <th style="width: 110px;">Moneda</th>
-                    <th style="width: 140px;">Precio</th>
-                    <th style="width: 90px;">Cant. mín.</th>
+                    <th style="width: 90px; padding: 0.3rem;">Moneda</th>
+                    <th style="width: 110px; padding: 0.3rem;">Precio</th>
+                    <th style="width: 90px; padding: 0.3rem;">Cant. mín.</th>
                   </tr>
                 </thead>
                 <tbody id="monedas-ajustes-container">
@@ -79,16 +79,16 @@ async function llenarMonedasAjustes(preciosExistentes = {}) {
     const cantidadMinima = datos.min || 1;
     return `
       <tr>
-        <td style="vertical-align: middle;">
-          <div class="form-check">
+        <td style="vertical-align: middle; padding: 0.3rem;">
+          <div class="form-check mb-0">
             <input class="form-check-input moneda-check" type="checkbox" id="moneda-${m.codigo}" value="${m.codigo}" ${checked} onchange="toggleAjusteMoneda('${m.codigo}')">
             <label class="form-check-label" for="moneda-${m.codigo}">${m.codigo}</label>
           </div>
         </td>
-        <td style="vertical-align: middle;">
-          <input type="number" step="0.01" min="0" class="form-control form-control-sm" id="precio-${m.codigo}" value="${precioValor}" style="width: 120px;" ${checked ? '' : 'disabled'}>
+        <td style="vertical-align: middle; padding: 0.3rem;">
+          <input type="number" step="0.01" min="0" class="form-control form-control-sm" id="precio-${m.codigo}" value="${precioValor}" style="width: 100px;" ${checked ? '' : 'disabled'}>
         </td>
-        <td style="vertical-align: middle;">
+        <td style="vertical-align: middle; padding: 0.3rem;">
           <input type="number" step="1" min="1" class="form-control form-control-sm" id="min-${m.codigo}" value="${cantidadMinima}" style="width: 70px;" ${checked ? '' : 'disabled'}>
         </td>
       </tr>

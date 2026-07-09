@@ -20,6 +20,7 @@ async function cargarMonedas() {
   generarBotonesMoneda();
   inyectarModalCambioMoneda();
   await actualizarMetodosPago();
+  await actualizarConfiguracionMoneda();
 }
 
 function inyectarModalCambioMoneda() {
@@ -56,7 +57,7 @@ function inyectarModalCambioMoneda() {
     document.getElementById('current-currency-label').textContent = codigoPendiente;
     generarBotonesMoneda();
     document.getElementById('moneda-list').classList.remove('show');
-    actualizarRecargoDesdeMoneda();
+    actualizarConfiguracionMoneda();
     actualizarMetodosPago();
 
     if (categoriaActiva === 'combos') {
@@ -92,7 +93,7 @@ function cambiarMoneda(codigo) {
   document.getElementById('current-currency-label').textContent = codigo;
   generarBotonesMoneda();
   document.getElementById('moneda-list').classList.remove('show');
-  actualizarRecargoDesdeMoneda();
+  actualizarConfiguracionMoneda();
   actualizarMetodosPago();
   if (categoriaActiva === 'combos') {
     cargarCombosPublicos();
@@ -163,18 +164,20 @@ async function actualizarMetodosPago() {
 
 // ─── Configuración y recargo ────────────
 async function cargarConfiguracion() {
-  await actualizarRecargoDesdeMoneda();
+  await actualizarConfiguracionMoneda();
   await actualizarMetodosPago();
 }
 
-async function actualizarRecargoDesdeMoneda() {
+async function actualizarConfiguracionMoneda() {
   const { data } = await supabaseClient
     .from('monedas')
-    .select('recargo_transferencia')
+    .select('recargo_transferencia, aplica_domicilio')
     .eq('codigo', monedaActiva)
     .single();
   recargoTransferencia = (data && !isNaN(data.recargo_transferencia)) ? parseFloat(data.recargo_transferencia) : 0;
+  aplicaDomicilio = data ? (data.aplica_domicilio !== false) : true;
   actualizarInfoRecargo();
+  actualizarVisibilidadDomicilio();
 }
 
 function actualizarInfoRecargo() {
@@ -187,6 +190,20 @@ function actualizarInfoRecargo() {
   } else {
     info.classList.add('d-none');
   }
+}
+
+function actualizarVisibilidadDomicilio() {
+  const container = document.getElementById('reparto-container');
+  if (!container) return;
+  if (aplicaDomicilio) {
+    container.classList.remove('d-none');
+  } else {
+    container.classList.add('d-none');
+    document.getElementById('reparto-input').value = '';
+    document.getElementById('reparto-precio').textContent = '';
+    document.getElementById('reparto-input').dataset.precio = '';
+  }
+  actualizarCarrito();
 }
 
 // ─── Categorías y productos ─────────────

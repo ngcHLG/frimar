@@ -393,16 +393,16 @@ h1, h2, h3, h4, h5, .navbar-brand, .card-title, .offcanvas-title {
 [data-theme="light"] { --splash-bg: rgba(242, 242, 242, 0.85); }
 [data-theme="dark"]  { --splash-bg: rgba(13, 17, 27, 0.85);   }
 
-/* Pantalla de carga TRIMAR */
-[data-theme="light"] { --splash-bg: rgba(242, 242, 242, 0.9); }
-[data-theme="dark"]  { --splash-bg: rgba(13, 17, 27, 0.9);   }
+/* Pantalla de carga FRIMAR */
+[data-theme="light"] { --splash-bg: rgba(242, 242, 242, 0.92); }
+[data-theme="dark"]  { --splash-bg: rgba(13, 17, 27, 0.92);   }
 
 .splash {
   position: fixed;
   top: 0; left: 0; width: 100%; height: 100%;
   background-color: var(--splash-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -427,22 +427,28 @@ h1, h2, h3, h4, h5, .navbar-brand, .card-title, .offcanvas-title {
 }
 
 .splash-title {
-  font-size: 3.5rem;
-  font-weight: bold;
-  color: var(--text-main);
-  line-height: 1.1;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 4rem;
+  font-weight: 800;
+  color: var(--accent-btn);       /* usa el color de acento, visible en ambos temas */
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  line-height: 1;
 }
 
 .splash-slogan {
-  font-size: 1.2rem;
-  color: var(--text-secondary);
+  font-family: 'Inter', sans-serif;
+  font-size: 1.25rem;
+  color: var(--text-main);
+  opacity: 0.85;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
+  margin-top: 0.3rem;
 }
 
-/* Ajuste para pantallas estrechas: logo más pequeño y texto apilado */
+/* Ajuste para pantallas estrechas */
 @media (max-width: 500px) {
   .splash-content {
     flex-direction: column;
@@ -453,10 +459,11 @@ h1, h2, h3, h4, h5, .navbar-brand, .card-title, .offcanvas-title {
     width: 70px;
   }
   .splash-title {
-    font-size: 2.2rem;
+    font-size: 2.5rem;
   }
   .splash-slogan {
-    font-size: 0.9rem;
-    white-space: normal;   /* permite que el eslogan se divida en dos líneas si es necesario */
+    font-size: 1rem;
+    white-space: normal; /* permite que el eslogan se divida en dos líneas si es necesario */
   }
+}
 }

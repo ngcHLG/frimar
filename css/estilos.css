@@ -430,3 +430,8 @@ h1, h2, h3, h4, h5, .navbar-brand, .card-title, .offcanvas-title {
   flex-direction: column;
   overflow-y: auto;
 }
+
+/* Alineación en ajustes de monedas */
+#monedas-ajustes-container .d-flex {
+  flex-wrap: nowrap;
+}

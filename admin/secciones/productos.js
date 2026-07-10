@@ -132,6 +132,7 @@ async function cargarProductos() {
       <div class="item-info" style="display:flex; align-items:center; gap:1rem; flex-grow:1;">
         <img src="${p.foto_url || ''}" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:4px;" onerror="this.style.display='none'">
         <span class="item-name" style="font-weight:600; text-transform:uppercase;">${p.nombre}</span>
+        <span style="font-size:0.85rem; color:var(--text-secondary);">Stock: ${p.stock ?? 0}</span>
         <span style="font-size:0.85rem; color:var(--text-secondary);">${preciosTexto}</span>
         <span style="font-size:0.85rem;">${p.activo ? 'Visible' : 'Oculto'}</span>
       </div>

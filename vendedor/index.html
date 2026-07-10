@@ -29,16 +29,81 @@
     </div>
   </div>
 
+  <!-- Aquí se inyecta dinámicamente: categorías + catálogo (punto-venta) o lista de pedidos -->
   <main class="container my-4" id="main-content"></main>
 
-  <!-- Elementos del cliente (ocultos) necesarios para que cliente.js no falle -->
+  <!-- FAB del carrito (siempre visible, aunque estemos en la pestaña de pedidos no molesta) -->
+  <div class="fab-container">
+    <button id="btn-cart-fab" class="fab-btn" data-bs-toggle="offcanvas" data-bs-target="#carritoOffcanvas" aria-label="Ver venta actual">
+      <i class="bi bi-cart3"></i>
+      <span id="cart-badge">0</span>
+    </button>
+  </div>
+
+  <!-- Elementos "stub" ocultos: existen en el DOM para que cliente.js no falle,
+       pero el vendedor no interactúa con ellos (moneda fija, sin tema, sin aviso de horario visible) -->
   <div style="display: none;">
-    <div class="fab-container">
-      <button id="btn-currency-toggle" class="fab-btn"><span id="current-currency-label">CUP</span></button>
-      <button id="btn-theme-toggle" class="fab-btn"><i id="theme-icon"></i></button>
-      <button id="btn-cart-fab" class="fab-btn"><span id="cart-badge">0</span></button>
-    </div>
+    <button id="btn-currency-toggle" class="fab-btn"><span id="current-currency-label">CUP</span></button>
+    <button id="btn-theme-toggle" class="fab-btn"><i id="theme-icon"></i></button>
     <div class="moneda-list" id="moneda-list"></div>
+    <div id="horario-aviso" class="d-none"><span id="horario-texto"></span></div>
+  </div>
+
+  <!-- Offcanvas Carrito (venta actual) -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="carritoOffcanvas">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title"><i class="bi bi-receipt"></i> Venta Actual</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+    </div>
+    <div class="offcanvas-body d-flex flex-column">
+      <div id="carrito-lista" class="list-group mb-3 flex-grow-1 overflow-auto" style="max-height: calc(100vh - 380px); min-height: 200px;"></div>
+
+      <div class="mt-auto">
+        <!-- Método de pago y reparto quedan ocultos por sobrescribir.js, pero deben existir en el DOM -->
+        <div class="mb-3 d-none" id="metodo-pago-container">
+          <label class="form-label fw-bold">Método de pago</label>
+          <select id="metodo-pago" class="form-select" onchange="actualizarCarrito()">
+            <option value="efectivo">Efectivo</option>
+            <option value="transferencia">Transferencia</option>
+          </select>
+          <small id="recargo-info" class="text-muted mt-1 d-none"></small>
+        </div>
+
+        <div class="mb-3 d-none" id="reparto-container">
+          <label class="form-label fw-bold">Reparto</label>
+          <input type="text" class="form-control" list="repartos-list" id="reparto-input" placeholder="Buscar reparto..." onchange="seleccionarReparto(this.value)">
+          <datalist id="repartos-list"></datalist>
+          <small id="reparto-precio" class="text-muted"></small>
+        </div>
+
+        <div class="bg-body p-3 rounded border">
+          <div class="d-flex justify-content-between text-muted mb-1">
+            <span>Subtotal:</span>
+            <span><span id="subtotal-carrito">0.00</span> <span id="subtotal-moneda">CUP</span></span>
+          </div>
+          <div id="recargo-desglose" class="d-flex justify-content-between text-muted mb-1 d-none">
+            <span>Recargo:</span>
+            <span><span id="recargo-aplicado">0.00</span> <span id="recargo-moneda">CUP</span></span>
+          </div>
+          <div id="envio-desglose" class="d-flex justify-content-between text-muted mb-2 d-none">
+            <span>Envío:</span>
+            <span><span id="envio-aplicado">0.00</span> <span id="envio-moneda">CUP</span></span>
+          </div>
+          <div id="envio-cup-desglose" class="d-flex justify-content-between text-muted mb-2 d-none">
+            <span>Envío (CUP):</span>
+            <span><span id="envio-cup-aplicado">0.00</span> CUP</span>
+          </div>
+          <div class="d-flex justify-content-between fw-bold fs-5 border-top border-secondary pt-2 mt-2">
+            <span>Total:</span>
+            <span><span id="total-pedido">0.00</span> <span id="total-moneda">CUP</span></span>
+          </div>
+        </div>
+
+        <button id="btn-checkout" class="btn btn-accent w-100 mt-3 py-2" disabled>
+          Cobrar pedido
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Modal de cobro -->
@@ -58,14 +123,25 @@
     </div>
   </div>
 
-  <!-- Toast de éxito (venta en tienda) -->
-  <div aria-live="polite" aria-atomic="true" style="position: fixed; bottom: 20px; left: 20px; right: 20px; z-index: 1060; display: flex; justify-content: center; pointer-events: none;">
-    <div id="toastPedido" class="toast align-items-center" role="alert" data-bs-delay="4000" style="width: auto; max-width: 90vw; min-width: 280px; pointer-events: auto; background-color: rgba(20,20,20,0.75); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); border-radius: 0.8rem; color: #fff;">
+  <!-- Contenedor Toasts -->
+  <div aria-live="polite" aria-atomic="true" style="position: fixed; bottom: 20px; left: 20px; right: 20px; z-index: 1060; display: flex; justify-content: center; pointer-events: none; flex-direction: column; align-items: center; gap: 10px;">
+    <!-- Toast de venta exitosa -->
+    <div id="toastPedido" class="toast align-items-center" role="alert" data-bs-delay="4000" style="width: auto; max-width: 90vw; min-width: 280px; pointer-events: auto; background-color: rgba(20,20,20,0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); border-radius: 0.8rem; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
       <div class="d-flex align-items-center" style="padding: 1rem;">
         <img src="../icon_regular_small.png" alt="FRIMAR" style="height: 28px; width: 28px; object-fit: contain; margin-right: 0.75rem; flex-shrink: 0;">
         <div style="flex: 1 1 auto; min-width: 0; overflow: hidden;">
           <div style="font-weight: bold; font-size: 1rem; color: #ffffff;">Pedido cobrado</div>
           <div style="font-size: 0.85rem; color: #FCE029;">Venta en tienda</div>
+        </div>
+      </div>
+    </div>
+    <!-- Toast de cantidad mínima (lo usa carrito.js) -->
+    <div id="toastCantidadMinima" class="toast align-items-center" role="alert" data-bs-delay="3000" style="width: auto; max-width: 90vw; min-width: 280px; pointer-events: auto; background-color: rgba(20,20,20,0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); border-radius: 0.8rem; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+      <div class="d-flex align-items-center" style="padding: 1rem;">
+        <img src="../icon_regular_small.png" alt="FRIMAR" style="height: 28px; width: 28px; object-fit: contain; margin-right: 0.75rem; flex-shrink: 0;">
+        <div style="flex: 1 1 auto; min-width: 0; overflow: hidden;">
+          <div style="font-weight: bold; font-size: 1rem; color: #ffffff;">Cantidad mínima</div>
+          <div style="font-size: 0.85rem; white-space: normal; overflow-wrap: break-word; line-height: 1.3; min-height: 2.6em; color: #FCE029;" id="toast-min-text"></div>
         </div>
       </div>
     </div>
@@ -105,16 +181,24 @@
       if (intervalPedidos) { clearInterval(intervalPedidos); intervalPedidos = null; }
 
       if (id === 'punto-venta') {
+        // Estructura mínima que cliente.js necesita para pintar categorías y productos
+        main.innerHTML = `
+          <div class="categorias-nav" style="position: static;">
+            <div class="container" id="categorias-container"></div>
+          </div>
+          <div id="productos-container" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mt-3"></div>
+        `;
+
         await cargarMonedas();           // versión sobrescrita
         await cargarConfiguracion();
         await cargarCategorias();
         await cargarProductos();
         await verificarCombosActivos();
-        await cargarRepartosEnvio();
+        await cargarRepartosEnvio();     // sobrescrita: no aplica reparto en tienda
         renderCategorias();
         await verificarHorario();
         renderProductos();
-        // El botón de pago y ocultación de secciones ya los maneja sobrescribir.js
+        // El botón "Cobrar pedido" y la ocultación de secciones ya los maneja sobrescribir.js
       } else if (id === 'pedidos') {
         window.pedidos.init(main);
         intervalPedidos = setInterval(() => window.pedidos.init(main), 30000);

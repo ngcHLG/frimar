@@ -313,7 +313,7 @@ window.pedidos.cambiarEstado = async function(id, nuevoEstado) {
   pedidosCargar();
 };
 
-// ─── Función de descuento de inventario (CORREGIDA) ───
+// ─── Función de descuento de inventario con notificación de stock bajo ───
 async function descontarStockDePedido(pedidoId) {
   // Obtener el pedido
   const { data: pedido, error: errPedido } = await window.guajiroPC
@@ -409,6 +409,9 @@ async function descontarStockDePedido(pedidoId) {
 
       if (errMov) {
         errores.push(`Error al registrar movimiento de "${nombreProducto}": ${errMov.message}`);
+      } else {
+        // ─── NOTIFICACIÓN DE STOCK BAJO (dinámico) ───
+        await window.notificarStockBajo(productoId, nombreProducto, stockNuevo);
       }
     }
   }
@@ -418,4 +421,4 @@ async function descontarStockDePedido(pedidoId) {
     return false;
   }
   return true;
-}
+        }

@@ -138,7 +138,14 @@
   <script>
     const SUPABASE_URL = 'https://xntjoyqwxqmjfdltydol.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_j1aIGvPLNaTTAbvlygmqzQ_-mCoDRBY';
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // MISMA storageKey que admin/comun.js — si no coinciden, el login
+    // "funciona" pero index.html nunca encuentra la sesión.
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        storageKey: 'sb-guajiro-admin-auth-token'
+      }
+    });
 
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();

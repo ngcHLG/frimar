@@ -215,7 +215,7 @@ async function cargarCategorias() {
 async function cargarProductos() {
   const { data } = await supabaseClient
     .from('productos')
-    .select('*, categorias(nombre)')
+    .select('*, categorias(nombre), stock')   // ← se añade 'stock'
     .eq('activo', true)
     .order('nombre');
   if (data) todosProductos = data;

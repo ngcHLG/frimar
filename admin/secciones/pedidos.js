@@ -2,11 +2,11 @@
 window.pedidos = {
   init: async function(container) {
     container.innerHTML = `
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 style="color: var(--text-main);"><i class="bi bi-receipt"></i> Pedidos</h2>
-        <div class="d-flex flex-nowrap align-items-center gap-2" style="max-width: 100%;">
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h2 class="mb-0 text-nowrap" style="color: var(--text-main);"><i class="bi bi-receipt"></i> Pedidos</h2>
+        <div class="d-flex flex-nowrap align-items-center gap-2">
           <button class="btn btn-outline-accent btn-sm text-nowrap" id="btn-seleccionar-todos" onclick="window.pedidos.seleccionarTodos()">
-            <i class="bi bi-check-square"></i> <span>Seleccionar todos</span>
+            <i class="bi bi-check-square"></i> <span>Seleccionar</span>
           </button>
           <button id="btn-eliminar-seleccionados" class="btn btn-outline-danger btn-sm position-relative d-none" onclick="window.pedidos.eliminarSeleccionados()" title="Eliminar seleccionados">
             <i class="bi bi-trash"></i>
@@ -214,11 +214,11 @@ window.pedidos.actualizarBotonSeleccionarTodos = function() {
   if (totalPedidos > 0 && window.pedidos.seleccionados.size === totalPedidos) {
     btn.classList.add('btn-accent');
     icono.className = 'bi bi-check-square-fill';
-    texto.textContent = 'Deseleccionar todos';
+    texto.textContent = 'Deseleccionar';
   } else {
     btn.classList.remove('btn-accent');
     icono.className = 'bi bi-check-square';
-    texto.textContent = 'Seleccionar todos';
+    texto.textContent = 'Seleccionar';
   }
 };
 
@@ -244,9 +244,6 @@ window.pedidos.eliminarSeleccionados = function() {
 
 // ─── Cambios de estado ───
 window.pedidos.cambiarEstado = async function(id, nuevoEstado) {
-  if (nuevoEstado === 'cancelado') {
-    if (!confirm('¿Cancelar este pedido?')) return;
-  }
   await window.guajiroPC.from('pedidos').update({ estado: nuevoEstado }).eq('id', id);
   pedidosCargar();
 };

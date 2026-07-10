@@ -1,72 +1,19 @@
-// pedido.js - Lógica de cobro para el vendedor
-// Sin modal, sin nombre de comprador: se cobra directo con un clic,
-// usando el método de pago que ya esté seleccionado en el carrito
-// (metodoPagoActivo, controlado por el propio selector de cliente.js).
-
-async function procesarCobro() {
-  if (!carrito.length) return;
-
-  const subtotal = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
-  let recargo = 0;
-  if (metodoPagoActivo === 'transferencia' && recargoTransferencia > 0) {
-    recargo = subtotal * (recargoTransferencia / 100);
-  }
-  const total = subtotal + recargo;
-
-  const pedidoData = {
-    nombre: 'Cliente de tienda',
-    telefono: 'N/A',
-    direccion: 'Tienda',
-    referencia: null,
-    metodo_pago: metodoPagoActivo,
-    moneda: monedaActiva,
-    zona: 'Venta en tienda',
-    envio: 0,
-    recargo: recargo,
-    total,
-    items: carrito.map(item => ({
-      nombre: item.nombre,
-      precio: item.precio,
-      moneda: item.moneda || monedaActiva,
-      cantidad: item.cantidad,
-      extras: item.extras || null,
-      esCombo: item.esCombo || false
-    })),
-    estado: 'confirmado',
-    origen: 'tienda'
-  };
-
-  const { error } = await window.vendedorSupabase.from('pedidos').insert([pedidoData]);
-  if (error) {
-    alert('Error al cobrar: ' + error.message);
-    return;
-  }
-
-  // Cerrar el carrito
-  const offcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('carritoOffcanvas'));
-  if (offcanvas) offcanvas.hide();
-
-  // Limpiar carrito
-  carrito = [];
-  actualizarCarrito();
-
-  // Mostrar toast de éxito
-  new bootstrap.Toast(document.getElementById('toastPedido')).show();
-}
-
-// ─── Listado de pedidos (sección "Pedidos" del vendedor) ───
+// pedidos.js – Vendedor
 window.pedidos = {
   init: async function(container) {
     container.innerHTML = `
-      <h2 class="mb-4 d-flex align-items-center gap-2">
-        <i class="bi bi-receipt text-secondary"></i> Pedidos
-      </h2>
-      <div id="pedidos-lista"></div>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 style="color: var(--text-main);"><i class="bi bi-receipt"></i> Pedidos</h2>
+      </div>
+      <div id="pedidos-lista" class="mt-3"></div>
     `;
     pedidoNotaStyleTag();
     await pedidosCargar();
+    this.interval = setInterval(pedidosCargar, 30000);
   },
-  destroy: function() {}
+  destroy: function() {
+    if (this.interval) clearInterval(this.interval);
+  }
 };
 
 function pedidoNotaStyleTag() {
@@ -154,7 +101,6 @@ async function pedidosCargar() {
   const { data } = await window.vendedorSupabase
     .from('pedidos')
     .select('*')
-    .eq('eliminado', false)
     .order('created_at', { ascending: false });
   const cont = document.getElementById('pedidos-lista');
   if (!cont) return;
@@ -174,7 +120,6 @@ async function pedidosCargar() {
 
     const subtotal = items.reduce((sum, i) => sum + (parseFloat(i.precio) * i.cantidad), 0);
     const envio = parseFloat(p.envio) || 0;
-    const recargo = parseFloat(p.recargo) || 0;
     const moneda = p.moneda || 'CUP';
 
     const estados = [
@@ -191,16 +136,17 @@ async function pedidosCargar() {
         <span class="pedido-nota__fecha">${new Date(p.created_at).toLocaleString()}</span>
       </div>
 
+      <span class="pedido-nota__linea"><i class="bi bi-telephone"></i> ${p.telefono}</span>
       <span class="pedido-nota__linea"><i class="bi bi-geo-alt"></i> ${p.direccion}</span>
+      ${p.referencia ? `<span class="pedido-nota__linea"><i class="bi bi-signpost"></i> Ref: ${p.referencia}</span>` : ''}
       <span class="pedido-nota__linea"><i class="bi bi-truck"></i> Reparto: ${p.zona}</span>
       <span class="pedido-nota__linea"><i class="bi bi-cash"></i> Pago: ${p.metodo_pago} (${moneda})</span>
 
       <div class="pedido-nota__items">
         ${items.map(i => `<div class="pedido-nota__item-row"><span>${i.cantidad}x ${i.nombre}</span><span>${(i.precio * i.cantidad).toFixed(2)}</span></div>`).join('')}
-        ${(envio > 0 || recargo > 0) ? `
+        ${envio > 0 ? `
           <div class="pedido-nota__desglose"><span>Subtotal</span><span>${subtotal.toFixed(2)} ${moneda}</span></div>
-          ${recargo > 0 ? `<div class="pedido-nota__desglose"><span>Recargo</span><span>${recargo.toFixed(2)} ${moneda}</span></div>` : ''}
-          ${envio > 0 ? `<div class="pedido-nota__desglose"><span>Envío</span><span>${envio.toFixed(2)} ${moneda}</span></div>` : ''}
+          <div class="pedido-nota__desglose"><span>Envío</span><span>${envio.toFixed(2)} CUP</span></div>
         ` : ''}
       </div>
 
@@ -213,7 +159,7 @@ async function pedidosCargar() {
         <span class="badge bg-${badgeClass}">${p.estado}</span>
         <div class="btn-group btn-group-sm" role="group">
           ${estados.map(e => `
-            <button class="btn ${p.estado === e.valor ? 'btn-accent' : 'btn-outline-accent'}" onclick="window.pedidos.cambiarEstado('${p.id}', '${e.valor}')" title="${e.titulo}">
+            <button class="btn ${p.estado === e.valor ? 'btn-accent' : 'btn-outline-accent'}" onclick="cambiarEstado('${p.id}', '${e.valor}')" title="${e.titulo}">
               <i class="bi ${e.icono}"></i>
             </button>
           `).join('')}
@@ -223,7 +169,7 @@ async function pedidosCargar() {
   }).join('');
 }
 
-window.pedidos.cambiarEstado = async function(id, nuevoEstado) {
+async function cambiarEstado(id, nuevoEstado) {
   await window.vendedorSupabase.from('pedidos').update({ estado: nuevoEstado }).eq('id', id);
   pedidosCargar();
-};
+}

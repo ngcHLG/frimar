@@ -1,10 +1,15 @@
-// comun.js - Funciones compartidas del panel ComeCome
+// comun.js - Funciones compartidas del panel ComeCome (Admin)
 (function() {
   const SUPABASE_URL = 'https://xntjoyqwxqmjfdltydol.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_j1aIGvPLNaTTAbvlygmqzQ_-mCoDRBY';
 
-  // Inicializar Supabase en una variable con nombre único
-  window.guajiroPC = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // storageKey propia para que la sesión de admin quede aislada de la
+  // sesión del vendedor (y de cualquier otro cliente Supabase de la página)
+  window.guajiroPC = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      storageKey: 'sb-guajiro-admin-auth-token'
+    }
+  });
 
   // Verificar sesión
   async function verificarSesion() {

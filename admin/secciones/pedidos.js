@@ -56,39 +56,47 @@ function pedidoNotaStyleTag() {
     .pedido-nota {
       display: block;
       width: 100%;
+      max-width: 420px;
+      margin: 0 auto 1.25rem;
       background: var(--bg-surface);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 1rem;
+      border: 1px dashed var(--border-color);
+      border-radius: 6px;
+      padding: 1rem 1.1rem;
       text-align: left;
-      font-family: 'Inter', sans-serif;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      font-family: 'Courier New', Courier, monospace;
+      position: relative;
     }
     .pedido-nota__header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 0.75rem;
+      border-bottom: 1px dashed var(--border-color);
+      padding-bottom: 0.5rem;
+      margin-bottom: 0.6rem;
     }
     .pedido-nota__check {
       background: none;
       border: none;
       padding: 0;
-      font-size: 1.3rem;
+      font-size: 1.25rem;
+      line-height: 1;
       color: var(--text-secondary);
       cursor: pointer;
     }
     .pedido-nota__check.is-checked { color: var(--accent-btn); }
-    .pedido-nota__fecha { font-size: 0.8rem; color: var(--text-secondary); }
+    .pedido-nota__fecha {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      letter-spacing: 0.02em;
+    }
     .pedido-nota__linea {
       display: block;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       margin-bottom: 0.3rem;
       color: var(--text-main);
     }
     .pedido-nota__linea i {
-      width: 1.3rem;
+      width: 1.2rem;
       display: inline-block;
       color: var(--text-secondary);
     }
@@ -100,24 +108,32 @@ function pedidoNotaStyleTag() {
     .pedido-nota__item-row {
       display: flex;
       justify-content: space-between;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: var(--text-main);
+      margin-bottom: 0.15rem;
+    }
+    .pedido-nota__desglose {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      margin-top: 0.3rem;
     }
     .pedido-nota__total {
       display: flex;
       justify-content: space-between;
       font-weight: 700;
+      font-size: 0.95rem;
       border-top: 1px dashed var(--border-color);
-      margin-top: 0.5rem;
-      padding-top: 0.5rem;
-      font-size: 1rem;
+      margin-top: 0.4rem;
+      padding-top: 0.4rem;
     }
     .pedido-nota__footer {
       display: flex;
       align-items: center;
       gap: 0.5rem;
       flex-wrap: wrap;
-      margin-top: 0.75rem;
+      margin-top: 0.7rem;
     }
   `;
   document.head.appendChild(style);
@@ -142,9 +158,9 @@ async function pedidosCargar() {
       cancelado: 'danger'
     }[p.estado] || 'secondary';
 
-    // Calcular subtotal (sin envío)
     const subtotal = items.reduce((sum, i) => sum + (parseFloat(i.precio) * i.cantidad), 0);
     const envio = parseFloat(p.envio) || 0;
+    const moneda = p.moneda || 'CUP';
 
     const estados = [
       { valor: 'pendiente', icono: 'bi-hourglass-split', titulo: 'Pendiente' },
@@ -167,18 +183,19 @@ async function pedidosCargar() {
       <span class="pedido-nota__linea"><i class="bi bi-geo-alt"></i> ${p.direccion}</span>
       ${p.referencia ? `<span class="pedido-nota__linea"><i class="bi bi-signpost"></i> Ref: ${p.referencia}</span>` : ''}
       <span class="pedido-nota__linea"><i class="bi bi-truck"></i> Reparto: ${p.zona}</span>
-      <span class="pedido-nota__linea"><i class="bi bi-cash"></i> Pago: ${p.metodo_pago} (${p.moneda || 'CUP'})</span>
+      <span class="pedido-nota__linea"><i class="bi bi-cash"></i> Pago: ${p.metodo_pago} (${moneda})</span>
 
       <div class="pedido-nota__items">
-        ${items.map(i => `<div class="pedido-nota__item-row"><span>· ${i.cantidad}x ${i.nombre}</span> <span>${(i.precio * i.cantidad).toFixed(2)} ${p.moneda || 'CUP'}</span></div>`).join('')}
+        ${items.map(i => `<div class="pedido-nota__item-row"><span>${i.cantidad}x ${i.nombre}</span><span>${(i.precio * i.cantidad).toFixed(2)}</span></div>`).join('')}
+        ${envio > 0 ? `
+          <div class="pedido-nota__desglose"><span>Subtotal</span><span>${subtotal.toFixed(2)} ${moneda}</span></div>
+          <div class="pedido-nota__desglose"><span>Envío</span><span>${envio.toFixed(2)} ${moneda}</span></div>
+        ` : ''}
       </div>
 
       <div class="pedido-nota__total">
         <span>Total</span>
-        <span>
-          ${envio > 0 ? `Sub: ${subtotal.toFixed(2)} · Envío: ${envio.toFixed(2)} · ` : ''}
-          <strong>${parseFloat(p.total).toFixed(2)} ${p.moneda || 'CUP'}</strong>
-        </span>
+        <span>${parseFloat(p.total).toFixed(2)} ${moneda}</span>
       </div>
 
       <div class="pedido-nota__footer">
@@ -286,3 +303,4 @@ window.pedidos.cambiarEstado = async function(id, nuevoEstado) {
   await window.guajiroPC.from('pedidos').update({ estado: nuevoEstado }).eq('id', id);
   pedidosCargar();
 };
+

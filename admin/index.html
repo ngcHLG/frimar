@@ -266,9 +266,13 @@
       });
     }
 
-    async function loadSection(id) {
+     async function loadSection(id) {
       const section = sections.find(s => s.id === id);
       if (!section) return;
+
+      // Detener la sección anterior (limpia intervalos, listeners, etc.)
+      if (currentSectionId && currentSectionId !== id && typeof window[currentSectionId]?.destroy === 'function') {
+        window[currentSectionId].destroy();
 
       // Actualizar tabs
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));

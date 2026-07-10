@@ -151,7 +151,11 @@ function pedidoNotaStyleTag() {
 }
 
 async function pedidosCargar() {
-  const { data } = await window.vendedorSupabase.from('pedidos').select('*').order('created_at', { ascending: false });
+  const { data } = await window.vendedorSupabase
+    .from('pedidos')
+    .select('*')
+    .eq('eliminado', false)
+    .order('created_at', { ascending: false });
   const cont = document.getElementById('pedidos-lista');
   if (!cont) return;
   if (!data || data.length === 0) {

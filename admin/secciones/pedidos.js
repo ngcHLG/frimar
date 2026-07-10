@@ -140,6 +140,7 @@ function pedidoNotaStyleTag() {
 }
 
 async function pedidosCargar() {
+  pedidoNotaStyleTag();
   const { data } = await window.guajiroPC.from('pedidos').select('*').order('created_at', { ascending: false });
   const cont = document.getElementById('pedidos-lista');
   if (!cont) return;

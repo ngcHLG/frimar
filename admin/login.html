@@ -139,28 +139,43 @@
     const SUPABASE_URL = 'https://xntjoyqwxqmjfdltydol.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_j1aIGvPLNaTTAbvlygmqzQ_-mCoDRBY';
 
-    // MISMA storageKey que admin/comun.js — si no coinciden, el login
-    // "funciona" pero index.html nunca encuentra la sesión.
+    // MISMA storageKey que admin/comun.js
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: {
         storageKey: 'sb-guajiro-admin-auth-token'
       }
     });
 
+    const errorDiv = document.getElementById('login-error');
+    const errorText = document.getElementById('error-text');
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error') === 'rol') {
+      errorText.textContent = 'Esta cuenta no tiene permisos de administrador.';
+      errorDiv.classList.remove('d-none');
+    }
+
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
-      const errorDiv = document.getElementById('login-error');
-      const errorText = document.getElementById('error-text');
 
       const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
       if (error) {
         errorText.textContent = 'Credenciales inválidas. Verifique los datos.';
         errorDiv.classList.remove('d-none');
-      } else {
-        window.location.href = 'index.html';
+        return;
       }
+
+      const rol = data.session?.user?.user_metadata?.rol;
+      if (rol !== 'admin') {
+        await supabaseClient.auth.signOut();
+        errorText.textContent = 'Esta cuenta no tiene permisos de administrador.';
+        errorDiv.classList.remove('d-none');
+        return;
+      }
+
+      window.location.href = 'index.html';
     });
   </script>
 </body>

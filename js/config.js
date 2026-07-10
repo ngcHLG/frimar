@@ -5,7 +5,7 @@ const SUPABASE_URL = 'https://xntjoyqwxqmjfdltydol.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_j1aIGvPLNaTTAbvlygmqzQ_-mCoDRBY';
 const NTFY_TOPIC = 'guajiro_productos_congelados';
 
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+var supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Variables compartidas
 let todasCategorias = [];

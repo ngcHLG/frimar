@@ -313,12 +313,12 @@ window.pedidos.cambiarEstado = async function(id, nuevoEstado) {
   pedidosCargar();
 };
 
-// ─── Función de descuento de inventario (NUEVA) ───
+// ─── Función de descuento de inventario (CORREGIDA) ───
 async function descontarStockDePedido(pedidoId) {
   // Obtener el pedido
   const { data: pedido, error: errPedido } = await window.guajiroPC
     .from('pedidos')
-    .select('items')
+    .select('items, estado')
     .eq('id', pedidoId)
     .single();
 
@@ -327,70 +327,78 @@ async function descontarStockDePedido(pedidoId) {
     return false;
   }
 
+  // Si ya está entregado, no descontar de nuevo
+  if (pedido.estado === 'entregado') {
+    return true;
+  }
+
   const items = Array.isArray(pedido.items) ? pedido.items : [];
   let errores = [];
 
   for (const item of items) {
-    // Si el item tiene subitems (es un combo), los usamos; si no, el propio item es el producto
-    const subitems = item.subitems && item.subitems.length > 0 ? item.subitems : [item];
+    // Si es combo, tiene subitems en item.items
+    const subitems = item.esCombo && Array.isArray(item.items) ? item.items : [item];
 
     for (const sub of subitems) {
+      // Intentar obtener producto_id
       let productoId = sub.producto_id;
+      let nombreProducto = sub.nombre;
 
-      // Si no tiene producto_id, buscamos por nombre (compatibilidad con pedidos antiguos)
       if (!productoId) {
+        // Buscar por nombre (compatibilidad con pedidos antiguos)
         const { data: productos } = await window.guajiroPC
           .from('productos')
           .select('id, stock')
-          .eq('nombre', sub.nombre)
+          .eq('nombre', nombreProducto)
           .limit(1);
         if (!productos || productos.length === 0) {
-          errores.push(`Producto "${sub.nombre}" no encontrado.`);
+          errores.push(`Producto "${nombreProducto}" no encontrado.`);
           continue;
         }
         productoId = productos[0].id;
         sub.stock_anterior = productos[0].stock;
       } else {
-        // Obtener stock actual del producto
+        // Obtener stock actual
         const { data: producto } = await window.guajiroPC
           .from('productos')
           .select('stock')
           .eq('id', productoId)
           .single();
         if (!producto) {
-          errores.push(`Producto "${sub.nombre}" no encontrado.`);
+          errores.push(`Producto "${nombreProducto}" no encontrado.`);
           continue;
         }
         sub.stock_anterior = producto.stock;
       }
 
+      const cantidad = sub.cantidad || 0;
+      if (cantidad <= 0) continue;
+
       const stockAnterior = sub.stock_anterior;
-      const cantidad = sub.cantidad;
       const stockNuevo = stockAnterior - cantidad;
 
-      // Verificar stock suficiente
       if (stockNuevo < 0) {
-        errores.push(`Stock insuficiente para "${sub.nombre}" (actual: ${stockAnterior}, necesario: ${cantidad}).`);
+        errores.push(`Stock insuficiente para "${nombreProducto}" (actual: ${stockAnterior}, necesario: ${cantidad}).`);
         continue;
       }
 
-      // Actualizar stock en la tabla productos
+      // Actualizar stock
       const { error: errUpdate } = await window.guajiroPC
         .from('productos')
         .update({ stock: stockNuevo })
         .eq('id', productoId);
 
       if (errUpdate) {
-        errores.push(`Error al actualizar stock de "${sub.nombre}": ${errUpdate.message}`);
+        errores.push(`Error al actualizar stock de "${nombreProducto}": ${errUpdate.message}`);
         continue;
       }
 
-      // Registrar el movimiento en inventario_movimientos
+      // Registrar movimiento
       const { error: errMov } = await window.guajiroPC
         .from('inventario_movimientos')
         .insert([{
           producto_id: productoId,
-          cantidad: -cantidad,            // negativo = salida
+          cantidad: -cantidad,
           tipo: 'venta',
           motivo: `Pedido #${pedidoId}`,
           pedido_id: pedidoId,
@@ -400,16 +408,14 @@ async function descontarStockDePedido(pedidoId) {
         }]);
 
       if (errMov) {
-        errores.push(`Error al registrar movimiento de "${sub.nombre}": ${errMov.message}`);
+        errores.push(`Error al registrar movimiento de "${nombreProducto}": ${errMov.message}`);
       }
     }
   }
 
   if (errores.length > 0) {
-    console.error('Errores al descontar inventario:', errores);
-    alert('Se produjeron errores al descontar el inventario:\n' + errores.join('\n'));
+    alert('Se produjeron errores al descontar inventario:\n' + errores.join('\n'));
     return false;
   }
-
   return true;
-          }
+}

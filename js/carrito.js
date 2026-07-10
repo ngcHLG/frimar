@@ -3,6 +3,7 @@
 
 function actualizarCantidadManual(index, inputObj) {
   const val = parseInt(inputObj.value);
+  const item = carrito[index];
 
   // Si el valor es inválido o menor que 1, se elimina el ítem
   if (isNaN(val) || val < 1) {
@@ -10,7 +11,22 @@ function actualizarCantidadManual(index, inputObj) {
     return;
   }
 
-  // Valor válido (la validación del mínimo se hace al proceder al pago)
+  // Validar stock para productos individuales
+  if (!item.esCombo) {
+    const producto = todosProductos.find(p => p.id === item.id);
+    if (producto) {
+      const stockDisponible = producto.stock || 0;
+      if (val > stockDisponible && stockDisponible > 0) {
+        document.getElementById('toast-min-text').textContent =
+          `Solo hay ${stockDisponible} unidades disponibles de ${item.nombre}.`;
+        new bootstrap.Toast(document.getElementById('toastCantidadMinima')).show();
+        inputObj.value = item.cantidad; // revertir
+        return;
+      }
+    }
+  }
+
+  // Valor válido
   carrito[index].cantidad = val;
   actualizarCarrito();
 }
@@ -26,7 +42,11 @@ async function agregarComboAlCarrito(comboId) {
   const grupo = carrito.find(item => item.id === comboId && item.esCombo);
   if (grupo) {
     grupo.cantidad += cantidadExtraida;
-    grupo.items = precioData.items.map(i => ({ nombre: i.productos.nombre, cantidad: i.cantidad }));
+    grupo.items = precioData.items.map(i => ({
+      producto_id: i.productos.id,
+      nombre: i.productos.nombre,
+      cantidad: i.cantidad
+    }));
   } else {
     carrito.push({
       id: comboId,
@@ -37,7 +57,11 @@ async function agregarComboAlCarrito(comboId) {
       cantidad: cantidadExtraida,
       extras: '',
       esCombo: true,
-      items: precioData.items.map(i => ({ nombre: i.productos.nombre, cantidad: i.cantidad }))
+      items: precioData.items.map(i => ({
+        producto_id: i.productos.id,
+        nombre: i.productos.nombre,
+        cantidad: i.cantidad
+      }))
     });
   }
   inputElem.value = 1;
@@ -136,29 +160,58 @@ function eliminarDelCarrito(index) {
   actualizarCarrito();
 }
 
-// ─── Validación de cantidad mínima al proceder al pago ───
+// ─── Validación de cantidad mínima y stock al proceder al pago ───
 function intentarProcederPago() {
   const invalidos = [];
 
   carrito.forEach(item => {
-    if (item.esCombo) return;
-    const producto = todosProductos.find(p => p.id === item.id);
-    if (!producto) return;
-    const min = obtenerCantidadMinima(producto);
-    if (item.cantidad < min) {
-      invalidos.push({ nombre: item.nombre, min });
-      item.cantidad = min;
+    if (item.esCombo) {
+      // Validar stock de cada producto del combo
+      for (const sub of (item.items || [])) {
+        const producto = todosProductos.find(p => p.id === sub.producto_id);
+        if (producto) {
+          const stockDisponible = producto.stock || 0;
+          const cantidadNecesaria = sub.cantidad * item.cantidad;
+          if (stockDisponible > 0 && cantidadNecesaria > stockDisponible) {
+            // Ajustar la cantidad del combo al máximo posible
+            const maxCombo = Math.floor(stockDisponible / sub.cantidad);
+            if (maxCombo < item.cantidad) {
+              invalidos.push({ nombre: item.nombre, max: maxCombo });
+              item.cantidad = maxCombo;
+            }
+          }
+        }
+      }
+    } else {
+      const producto = todosProductos.find(p => p.id === item.id);
+      if (!producto) return;
+      const min = obtenerCantidadMinima(producto);
+      const stockDisponible = producto.stock || 0;
+
+      // Validar cantidad mínima
+      if (item.cantidad < min) {
+        invalidos.push({ nombre: item.nombre, min });
+        item.cantidad = min;
+      }
+      // Validar stock
+      if (stockDisponible > 0 && item.cantidad > stockDisponible) {
+        invalidos.push({ nombre: item.nombre, max: stockDisponible });
+        item.cantidad = stockDisponible;
+      }
     }
   });
 
   if (invalidos.length > 0) {
     actualizarCarrito();
-    const detalle = invalidos.map(i => `${i.nombre} (mín. ${i.min})`).join(', ');
-    document.getElementById('toast-min-text').textContent = `Ajustamos la cantidad mínima requerida de: ${detalle}.`;
+    const detalle = invalidos.map(i => {
+      if (i.max !== undefined) return `${i.nombre} (máx. ${i.max})`;
+      if (i.min !== undefined) return `${i.nombre} (mín. ${i.min})`;
+      return i.nombre;
+    }).join(', ');
+    document.getElementById('toast-min-text').textContent = `Ajustamos las cantidades: ${detalle}.`;
     new bootstrap.Toast(document.getElementById('toastCantidadMinima')).show();
     return;
   }
 
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('facturacionOffcanvas')).show();
-}
-
+    }

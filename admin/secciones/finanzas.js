@@ -205,7 +205,7 @@ async function cargarDatos() {
   if (origen === 'tienda') {
     query = query.eq('origen', 'tienda');
   } else if (origen === 'pagina') {
-    query = query.is('origen', null);
+    query = query.eq('origen', null);
   }
 
   const { data, error } = await query.order('created_at', { ascending: false });

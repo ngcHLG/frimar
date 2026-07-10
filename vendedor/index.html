@@ -211,7 +211,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <!-- 2. comun.js del vendedor (crea vendedorSupabase) -->
-  <script src="comun.js?v=2.1"></script>
+  <script src="comun.js?v=2.2"></script>
 
   <!-- 3. Scripts del cliente original -->
   <script src="../js/config.js?v=2.1"></script>
@@ -290,6 +290,9 @@
 
     // ── Inicialización ──
     (async () => {
+      const sesion = await verificarSesion();
+      if (!sesion) return; // ya se está redirigiendo a login.html
+
       configurarSelectorMoneda();
       await cambiarSeccion('punto-venta');
     })();

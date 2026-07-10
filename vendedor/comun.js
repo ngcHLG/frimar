@@ -17,20 +17,22 @@ window.vendedorSupabase = supabase.createClient(
 // js/config.js reutilizará esta misma instancia en vez de crear otra
 window.supabaseClient = window.vendedorSupabase;
 
-async function verificarSesion() {
+// IMPORTANTE: esta función ya NO se autoejecuta al cargar la página.
+// Antes se disparaba en TODAS las páginas que incluyeran comun.js,
+// incluida login.html, donde al no haber sesión redirigía a
+// "login.html" (la misma página), provocando un recargado infinito
+// que no dejaba ni escribir las credenciales.
+// Ahora es index.html quien decide, explícitamente, cuándo llamarla.
+window.verificarSesion = async function() {
   const { data: { session } } = await window.vendedorSupabase.auth.getSession();
   if (!session) {
     window.location.href = 'login.html';
     return null;
   }
   return session;
-}
+};
 
 window.cerrarSesion = async function() {
   await window.vendedorSupabase.auth.signOut();
   window.location.href = 'login.html';
 };
-
-document.addEventListener('DOMContentLoaded', async () => {
-  await verificarSesion();
-});

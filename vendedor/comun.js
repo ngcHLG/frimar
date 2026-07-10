@@ -1,9 +1,21 @@
 // comun.js - Vendedor (sin redeclarar SUPABASE_URL)
-// Usa las credenciales ya definidas en ../js/config.js, pero crea su propio cliente
+// Crea el cliente de Supabase del vendedor con su PROPIA storageKey de
+// autenticación, para que su sesión de login quede aislada de la del
+// administrador y de cualquier otro cliente creado en la página (evita
+// el warning "Multiple GoTrueClient instances" y evita que una sesión
+// de /admin haga que /vendedor no pida login).
 window.vendedorSupabase = supabase.createClient(
   'https://xntjoyqwxqmjfdltydol.supabase.co',
-  'sb_publishable_j1aIGvPLNaTTAbvlygmqzQ_-mCoDRBY'
+  'sb_publishable_j1aIGvPLNaTTAbvlygmqzQ_-mCoDRBY',
+  {
+    auth: {
+      storageKey: 'sb-guajiro-vendedor-auth-token'
+    }
+  }
 );
+
+// js/config.js reutilizará esta misma instancia en vez de crear otra
+window.supabaseClient = window.vendedorSupabase;
 
 async function verificarSesion() {
   const { data: { session } } = await window.vendedorSupabase.auth.getSession();

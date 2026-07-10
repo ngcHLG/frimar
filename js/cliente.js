@@ -213,7 +213,11 @@ async function cargarCategorias() {
 }
 
 async function cargarProductos() {
-  const { data } = await supabaseClient.from('productos').select('*, categorias(nombre)').eq('activo', true).order('nombre');
+  const { data } = await supabaseClient
+    .from('productos')
+    .select('*, categorias(nombre)')
+    .eq('activo', true)
+    .order('nombre');
   if (data) todosProductos = data;
 }
 
@@ -312,7 +316,11 @@ function renderProductos() {
     container.innerHTML = '<p class="text-muted">No existen registros en esta clasificación.</p>';
     return;
   }
-  container.innerHTML = productosFiltrados.map(p => `
+  container.innerHTML = productosFiltrados.map(p => {
+    const stock = p.stock !== undefined ? p.stock : 0;
+    const stockText = stock > 0 ? `Stock: ${stock}` : 'Sin stock';
+    const stockColor = stock > 5 ? 'text-success' : (stock > 0 ? 'text-warning' : 'text-danger');
+    return `
     <div class="col">
       <div class="card card-producto h-100">
         <div class="producto-media position-relative">
@@ -324,7 +332,8 @@ function renderProductos() {
         <div class="card-body d-flex flex-column">
           <h6 class="card-title mb-1">${p.nombre}</h6>
           <p class="card-text small text-muted flex-grow-1">${p.descripcion || ''}</p>
-          <div class="precio-text mb-3">${obtenerPrecioProducto(p)}</div>
+          <div class="precio-text mb-2">${obtenerPrecioProducto(p)}</div>
+          <div class="small ${stockColor} mb-2">${stockText}</div>
           <div class="d-flex gap-2 align-items-center">
             <input type="number" id="qty-${p.id}" class="form-control qty-input" style="width: 70px;" min="${obtenerCantidadMinima(p)}" value="${obtenerCantidadMinima(p)}" ${!horarioAbierto ? 'disabled' : ''}>
             <button class="btn btn-accent flex-grow-1" onclick="agregarAlCarrito('${p.id}')" ${!horarioAbierto ? 'disabled' : ''}>
@@ -333,11 +342,17 @@ function renderProductos() {
           </div>
         </div>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
-// ─── Agregar al carrito con aviso de cantidad mínima ───
+function validarCantidadMinima(input, min) {
+  if (parseInt(input.value) < min || isNaN(parseInt(input.value))) {
+    input.value = min;
+  }
+}
+
+// ─── Agregar al carrito con validación de stock ───
 function agregarAlCarrito(idProducto) {
   const producto = todosProductos.find(p => p.id === idProducto);
   if (!producto) return;
@@ -355,12 +370,20 @@ function agregarAlCarrito(idProducto) {
   const cantidadTotal = cantidadYaEnCarrito + cantidadDeseada;
 
   if (cantidadTotal < min) {
-    // Mostrar toast explicativo y no añadir
     document.getElementById('toast-min-text').textContent =
       `Debes comprar al menos ${min} unidades de ${producto.nombre} en ${monedaActiva}.`;
     new bootstrap.Toast(document.getElementById('toastCantidadMinima')).show();
-    inputElem.value = min; // corregir el campo visual
-    return; // No se añade nada al carrito
+    inputElem.value = min;
+    return;
+  }
+
+  // Validar stock
+  const stockDisponible = producto.stock || 0;
+  if (stockDisponible > 0 && cantidadTotal > stockDisponible) {
+    document.getElementById('toast-min-text').textContent =
+      `Solo hay ${stockDisponible} unidades disponibles de ${producto.nombre}.`;
+    new bootstrap.Toast(document.getElementById('toastCantidadMinima')).show();
+    return;
   }
 
   if (grupo) {
@@ -390,7 +413,7 @@ async function obtenerPrecioCombo(comboId) {
 
   const { data: items, error: errItems } = await supabaseClient
     .from('combo_items')
-    .select('*, productos(nombre, precios)')
+    .select('*, productos(id, nombre, precios, stock)')
     .eq('combo_id', comboId);
   if (errItems || !items || items.length === 0) return null;
 
@@ -431,6 +454,17 @@ async function cargarCombosPublicos() {
   for (const combo of combos) {
     const precioData = await obtenerPrecioCombo(combo.id);
     if (!precioData) continue;
+
+    // Verificar stock de todos los productos del combo
+    let stockSuficiente = true;
+    for (const item of precioData.items) {
+      const producto = todosProductos.find(p => p.id === item.productos.id);
+      if (!producto || (producto.stock || 0) < item.cantidad) {
+        stockSuficiente = false;
+        break;
+      }
+    }
+    if (!stockSuficiente) continue;
 
     const { items, originalTotal, finalPrice } = precioData;
     const listaProductos = items.map(i => `${i.cantidad}x ${i.productos.nombre}`).join(', ');
@@ -501,5 +535,4 @@ async function verificarHorario() {
 
   document.getElementById('horario-aviso').classList.toggle('d-none', horarioAbierto);
   document.getElementById('horario-texto').textContent = textoHorario;
-}
-
+      }

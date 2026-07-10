@@ -28,6 +28,14 @@ window.finanzas = {
           <input type="text" class="form-control form-control-sm" id="fin-filtro-moneda" placeholder="Ej: CUP, USD...">
         </div>
         <div class="finanzas-filtro-grupo">
+          <label>Pago</label>
+          <select class="form-select form-select-sm" id="fin-filtro-pago">
+            <option value="">Todos</option>
+            <option value="efectivo">Efectivo</option>
+            <option value="transferencia">Transferencia</option>
+          </select>
+        </div>
+        <div class="finanzas-filtro-grupo">
           <label>Origen</label>
           <select class="form-select form-select-sm" id="fin-filtro-origen">
             <option value="">Todos</option>
@@ -53,6 +61,7 @@ window.finanzas = {
               <th>Producto</th>
               <th>Cant.</th>
               <th>Precio</th>
+              <th>Pago</th>
             </tr>
           </thead>
           <tbody id="fin-tbody"></tbody>
@@ -71,6 +80,7 @@ window.finanzas = {
     ['fin-filtro-producto', 'fin-filtro-moneda'].forEach(id =>
       document.getElementById(id).addEventListener('input', () => { paginaActual = 1; renderTabla(); })
     );
+    document.getElementById('fin-filtro-pago').addEventListener('change', () => { paginaActual = 1; renderTabla(); });
     document.getElementById('fin-filtro-origen').addEventListener('change', () => cargarDatos());
     document.getElementById('fin-check-all').addEventListener('change', (e) => toggleTodos(e.target.checked));
     document.getElementById('fin-btn-eliminar').addEventListener('click', eliminarSeleccionados);
@@ -83,7 +93,7 @@ window.finanzas = {
   }
 };
 
-let ventasCache = [];      // filas planas de ventas (una por producto)
+let ventasCache = [];      // filas planas de ventas (una por producto + una por cargo de transferencia)
 let seleccionados = new Set(); // claves "pedidoId::itemIndex" seleccionadas
 let paginaActual = 1;
 const PAGINA_TAM = 25;
@@ -132,6 +142,10 @@ function finanzasStyleTag() {
     .finanzas-tabla tbody tr:hover {
       background-color: rgba(138, 141, 145, 0.08);
     }
+    .fin-fila-cargo td {
+      font-style: italic;
+      color: var(--text-secondary);
+    }
     .fin-pagina-btn {
       background: transparent;
       border: 1px solid var(--border-color);
@@ -178,7 +192,9 @@ async function cargarDatos() {
   const hasta = document.getElementById('fin-fecha-hasta').value;
   const origen = document.getElementById('fin-filtro-origen').value;
 
-  let query = window.guajiroPC.from('pedidos').select('id, created_at, items, moneda, origen, estado').eq('estado', 'entregado');
+  let query = window.guajiroPC.from('pedidos')
+    .select('id, created_at, items, moneda, origen, estado, metodo_pago, recargo')
+    .eq('estado', 'entregado');
 
   if (desde) {
     query = query.gte('created_at', `${desde}T00:00:00`);
@@ -195,11 +211,13 @@ async function cargarDatos() {
   const { data, error } = await query.order('created_at', { ascending: false });
 
   if (error) {
-    document.getElementById('fin-tbody').innerHTML = `<tr><td colspan="5" class="text-danger">Error al cargar: ${error.message}</td></tr>`;
+    document.getElementById('fin-tbody').innerHTML = `<tr><td colspan="6" class="text-danger">Error al cargar: ${error.message}</td></tr>`;
     return;
   }
 
-  // Aplanar: una fila por producto vendido
+  // Aplanar: una fila por producto vendido, más una fila de cargo por
+  // transferencia por pedido (el % se calcula sobre todo el pedido, no
+  // por producto individual, así que no se reparte entre los productos).
   ventasCache = [];
   (data || []).forEach(pedido => {
     const items = Array.isArray(pedido.items) ? pedido.items : [];
@@ -211,9 +229,26 @@ async function cargarDatos() {
         producto: item.nombre,
         cantidad: item.cantidad,
         precio: parseFloat(item.precio) || 0,
-        moneda: item.moneda || pedido.moneda || 'CUP'
+        moneda: item.moneda || pedido.moneda || 'CUP',
+        metodoPago: pedido.metodo_pago,
+        esCargo: false
       });
     });
+
+    const recargo = parseFloat(pedido.recargo) || 0;
+    if (recargo > 0) {
+      ventasCache.push({
+        clave: `${pedido.id}::recargo`,
+        pedidoId: pedido.id,
+        fecha: pedido.created_at,
+        producto: 'Cargo por transferencia',
+        cantidad: 1,
+        precio: recargo,
+        moneda: pedido.moneda || 'CUP',
+        metodoPago: pedido.metodo_pago,
+        esCargo: true
+      });
+    }
   });
 
   seleccionados.clear();
@@ -224,11 +259,13 @@ async function cargarDatos() {
 function filasFiltradas() {
   const filtroProducto = document.getElementById('fin-filtro-producto').value.trim().toLowerCase();
   const filtroMoneda = document.getElementById('fin-filtro-moneda').value.trim().toLowerCase();
+  const filtroPago = document.getElementById('fin-filtro-pago').value;
 
   return ventasCache.filter(v => {
     const okProducto = !filtroProducto || v.producto.toLowerCase().includes(filtroProducto);
     const okMoneda = !filtroMoneda || v.moneda.toLowerCase().includes(filtroMoneda);
-    return okProducto && okMoneda;
+    const okPago = !filtroPago || v.metodoPago === filtroPago;
+    return okProducto && okMoneda && okPago;
   });
 }
 
@@ -244,15 +281,16 @@ function renderTabla() {
   if (!tbody) return;
 
   if (filas.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="text-muted text-center py-3">No hay ventas para estos filtros.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-muted text-center py-3">No hay ventas para estos filtros.</td></tr>';
   } else {
     tbody.innerHTML = filasPagina.map(v => `
-      <tr>
+      <tr class="${v.esCargo ? 'fin-fila-cargo' : ''}">
         <td><input type="checkbox" class="fin-check-item" data-clave="${v.clave}" ${seleccionados.has(v.clave) ? 'checked' : ''}></td>
         <td>${new Date(v.fecha).toLocaleDateString()}</td>
         <td>${v.producto}</td>
         <td>${v.cantidad}</td>
         <td>${v.precio.toFixed(2)} ${v.moneda}</td>
+        <td>${v.metodoPago || '-'}</td>
       </tr>
     `).join('');
 

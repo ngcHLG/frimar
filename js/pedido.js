@@ -51,6 +51,7 @@ async function confirmarPedido() {
     moneda: monedaActiva,
     zona: zonaTexto,
     envio: envio,
+    recargo: recargo,
     total,
     items: carrito.map(item => ({
       nombre: item.nombre,

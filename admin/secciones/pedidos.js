@@ -14,11 +14,35 @@ window.pedidos = {
           </button>
         </div>
       </div>
+
+      <div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+        <div>
+          <label class="form-label small mb-1" style="color: var(--text-secondary);">Desde</label>
+          <input type="date" class="form-control form-control-sm" id="ped-fecha-desde">
+        </div>
+        <div>
+          <label class="form-label small mb-1" style="color: var(--text-secondary);">Hasta</label>
+          <input type="date" class="form-control form-control-sm" id="ped-fecha-hasta">
+        </div>
+        <button class="btn btn-outline-accent btn-sm" id="btn-ped-limpiar-fechas">
+          <i class="bi bi-x-circle"></i> Limpiar
+        </button>
+      </div>
+
       <div id="pedidos-lista" class="mt-3"></div>
       ${modalConfirmacionHTML()}
     `;
 
     this.seleccionados = new Set();
+
+    document.getElementById('ped-fecha-desde').addEventListener('change', () => pedidosCargar());
+    document.getElementById('ped-fecha-hasta').addEventListener('change', () => pedidosCargar());
+    document.getElementById('btn-ped-limpiar-fechas').addEventListener('click', () => {
+      document.getElementById('ped-fecha-desde').value = '';
+      document.getElementById('ped-fecha-hasta').value = '';
+      pedidosCargar();
+    });
+
     await pedidosCargar();
     this.interval = setInterval(pedidosCargar, 30000);
   },
@@ -141,11 +165,21 @@ function pedidoNotaStyleTag() {
 
 async function pedidosCargar() {
   pedidoNotaStyleTag();
-  const { data } = await window.guajiroPC.from('pedidos').select('*').order('created_at', { ascending: false });
+
+  const desde = document.getElementById('ped-fecha-desde')?.value;
+  const hasta = document.getElementById('ped-fecha-hasta')?.value;
+
+  let query = window.guajiroPC.from('pedidos').select('*').eq('eliminado', false);
+  if (desde) query = query.gte('created_at', `${desde}T00:00:00`);
+  if (hasta) query = query.lte('created_at', `${hasta}T23:59:59`);
+
+  const { data } = await query.order('created_at', { ascending: false });
   const cont = document.getElementById('pedidos-lista');
   if (!cont) return;
   if (!data || data.length === 0) {
-    cont.innerHTML = '<p class="text-muted text-start">No hay pedidos aún.</p>';
+    cont.innerHTML = '<p class="text-muted text-start">No hay pedidos para este filtro.</p>';
+    window.pedidos.actualizarBotonEliminar();
+    window.pedidos.actualizarBotonSeleccionarTodos();
     return;
   }
 
@@ -217,6 +251,10 @@ async function pedidosCargar() {
 }
 
 // ─── Selección y eliminación ───
+// seleccionarTodos / eliminarSeleccionados solo operan sobre lo que está
+// actualmente renderizado en #pedidos-lista, es decir, respetan el filtro
+// de fechas activo (no seleccionan ni borran pedidos fuera del rango).
+
 window.pedidos.togglePedido = function(id, boton) {
   if (window.pedidos.seleccionados.has(id)) {
     window.pedidos.seleccionados.delete(id);
@@ -232,22 +270,23 @@ window.pedidos.togglePedido = function(id, boton) {
 };
 
 window.pedidos.seleccionarTodos = function() {
-  const totalPedidos = document.querySelectorAll('#pedidos-lista .pedido-nota').length;
-  if (window.pedidos.seleccionados.size === totalPedidos && totalPedidos > 0) {
-    window.pedidos.seleccionados.clear();
-    document.querySelectorAll('#pedidos-lista .pedido-nota__check').forEach(btn => {
-      btn.classList.remove('is-checked');
-      btn.querySelector('i').className = 'bi bi-square';
-    });
+  const idsVisibles = [...document.querySelectorAll('#pedidos-lista .pedido-nota')].map(el => el.getAttribute('data-pedido-id'));
+  const todosVisiblesSeleccionados = idsVisibles.length > 0 && idsVisibles.every(id => window.pedidos.seleccionados.has(id));
+
+  if (todosVisiblesSeleccionados) {
+    idsVisibles.forEach(id => window.pedidos.seleccionados.delete(id));
   } else {
-    document.querySelectorAll('#pedidos-lista .pedido-nota').forEach(item => {
-      const id = item.getAttribute('data-pedido-id');
-      const btn = item.querySelector('.pedido-nota__check');
-      window.pedidos.seleccionados.add(id);
-      btn.classList.add('is-checked');
-      btn.querySelector('i').className = 'bi bi-check-square-fill';
-    });
+    idsVisibles.forEach(id => window.pedidos.seleccionados.add(id));
   }
+
+  document.querySelectorAll('#pedidos-lista .pedido-nota').forEach(item => {
+    const id = item.getAttribute('data-pedido-id');
+    const btn = item.querySelector('.pedido-nota__check');
+    const marcado = window.pedidos.seleccionados.has(id);
+    btn.classList.toggle('is-checked', marcado);
+    btn.querySelector('i').className = marcado ? 'bi bi-check-square-fill' : 'bi bi-square';
+  });
+
   window.pedidos.actualizarBotonEliminar();
   window.pedidos.actualizarBotonSeleccionarTodos();
 };
@@ -255,6 +294,7 @@ window.pedidos.seleccionarTodos = function() {
 window.pedidos.actualizarBotonEliminar = function() {
   const btn = document.getElementById('btn-eliminar-seleccionados');
   const span = document.getElementById('cantidad-seleccionados');
+  if (!btn) return;
   if (window.pedidos.seleccionados.size > 0) {
     btn.classList.remove('d-none');
     span.textContent = window.pedidos.seleccionados.size;
@@ -265,10 +305,13 @@ window.pedidos.actualizarBotonEliminar = function() {
 
 window.pedidos.actualizarBotonSeleccionarTodos = function() {
   const btn = document.getElementById('btn-seleccionar-todos');
+  if (!btn) return;
   const icono = btn.querySelector('i');
   const texto = btn.querySelector('span');
-  const totalPedidos = document.querySelectorAll('#pedidos-lista .pedido-nota').length;
-  if (totalPedidos > 0 && window.pedidos.seleccionados.size === totalPedidos) {
+  const idsVisibles = [...document.querySelectorAll('#pedidos-lista .pedido-nota')].map(el => el.getAttribute('data-pedido-id'));
+  const todosVisiblesSeleccionados = idsVisibles.length > 0 && idsVisibles.every(id => window.pedidos.seleccionados.has(id));
+
+  if (todosVisiblesSeleccionados) {
     btn.classList.add('btn-accent');
     icono.className = 'bi bi-check-square-fill';
     texto.textContent = 'Deseleccionar';
@@ -279,17 +322,20 @@ window.pedidos.actualizarBotonSeleccionarTodos = function() {
   }
 };
 
+// Borrado lógico: solo oculta el pedido de este panel, NO borra la fila
+// de la tabla `pedidos`, así que Finanzas (que ignora `eliminado`) sigue
+// mostrando la venta si estaba entregada.
 window.pedidos.eliminarSeleccionados = function() {
   if (window.pedidos.seleccionados.size === 0) return;
   const modalEl = document.getElementById('confirmarEliminarModal');
   const mensaje = document.getElementById('confirmar-mensaje');
-  mensaje.textContent = `¿Eliminar ${window.pedidos.seleccionados.size} pedido(s)?`;
+  mensaje.textContent = `¿Eliminar ${window.pedidos.seleccionados.size} pedido(s) de este listado? (Las ventas entregadas seguirán apareciendo en Finanzas)`;
   const modal = new bootstrap.Modal(modalEl);
   modal.show();
   document.getElementById('btn-confirmar-eliminar').onclick = async () => {
     modal.hide();
     const ids = [...window.pedidos.seleccionados];
-    const { error } = await window.guajiroPC.from('pedidos').delete().in('id', ids);
+    const { error } = await window.guajiroPC.from('pedidos').update({ eliminado: true }).in('id', ids);
     if (error) {
       alert('Error al eliminar: ' + error.message);
       return;
@@ -304,4 +350,3 @@ window.pedidos.cambiarEstado = async function(id, nuevoEstado) {
   await window.guajiroPC.from('pedidos').update({ estado: nuevoEstado }).eq('id', id);
   pedidosCargar();
 };
-

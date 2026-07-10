@@ -61,21 +61,27 @@
     </div>
   </div>
 
-  <!-- Scripts del cliente original (se cargan desde la raíz) -->
+  <!-- 1. Librerías CDN (deben ir antes que cualquier script propio) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- 2. comun.js del vendedor (crea vendedorSupabase) -->
+  <script src="comun.js"></script>
+
+  <!-- 3. Scripts del cliente (usan las credenciales del cliente) -->
   <script src="../js/config.js?v=2.0"></script>
   <script src="../js/cliente.js?v=2.0"></script>
   <script src="../js/carrito.js?v=2.0"></script>
 
-  <!-- Scripts propios del vendedor -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="comun.js"></script>
+  <!-- 4. Adaptación para el vendedor (reasigna supabaseClient y cambia botón) -->
   <script src="sobrescribir.js"></script>
+
+  <!-- 5. Lógica de cobro y pedidos -->
   <script src="pedido.js"></script>
   <script src="pedidos.js"></script>
 
+  <!-- 6. Control de pestañas -->
   <script>
-    // Control de pestañas
     const tabs = document.querySelectorAll('.tab-btn');
     const main = document.getElementById('main-content');
     let intervalPedidos = null;
@@ -89,7 +95,6 @@
       if (intervalPedidos) { clearInterval(intervalPedidos); intervalPedidos = null; }
 
       if (id === 'punto-venta') {
-        // Inicializar el punto de venta (cliente adaptado)
         await cargarMonedas();
         await cargarConfiguracion();
         await cargarCategorias();
@@ -100,10 +105,8 @@
         await verificarHorario();
         renderProductos();
         configurarSelectorMoneda();
-        // Ocultar secciones que no se usan en tienda
         document.getElementById('metodo-pago-container').classList.add('d-none');
         document.getElementById('reparto-container').classList.add('d-none');
-        // El botón de pago ya fue ajustado por sobrescribir.js
       } else if (id === 'pedidos') {
         window.pedidos.init(main);
         intervalPedidos = setInterval(() => window.pedidos.init(main), 30000);

@@ -298,8 +298,118 @@ window.pedidos.eliminarSeleccionados = function() {
   };
 };
 
-// ─── Cambios de estado ───
+// ─── Cambios de estado (MODIFICADO para inventario) ───
 window.pedidos.cambiarEstado = async function(id, nuevoEstado) {
+  // Si el nuevo estado es 'entregado', primero descontamos el stock
+  if (nuevoEstado === 'entregado') {
+    const ok = await descontarStockDePedido(id);
+    if (!ok) {
+      alert('No se pudo descontar el inventario. Revisa el stock de los productos.');
+      return;   // no cambiamos el estado
+    }
+  }
+
   await window.guajiroPC.from('pedidos').update({ estado: nuevoEstado }).eq('id', id);
   pedidosCargar();
 };
+
+// ─── Función de descuento de inventario (NUEVA) ───
+async function descontarStockDePedido(pedidoId) {
+  // Obtener el pedido
+  const { data: pedido, error: errPedido } = await window.guajiroPC
+    .from('pedidos')
+    .select('items')
+    .eq('id', pedidoId)
+    .single();
+
+  if (errPedido || !pedido) {
+    console.error('No se pudo obtener el pedido', errPedido);
+    return false;
+  }
+
+  const items = Array.isArray(pedido.items) ? pedido.items : [];
+  let errores = [];
+
+  for (const item of items) {
+    // Si el item tiene subitems (es un combo), los usamos; si no, el propio item es el producto
+    const subitems = item.subitems && item.subitems.length > 0 ? item.subitems : [item];
+
+    for (const sub of subitems) {
+      let productoId = sub.producto_id;
+
+      // Si no tiene producto_id, buscamos por nombre (compatibilidad con pedidos antiguos)
+      if (!productoId) {
+        const { data: productos } = await window.guajiroPC
+          .from('productos')
+          .select('id, stock')
+          .eq('nombre', sub.nombre)
+          .limit(1);
+        if (!productos || productos.length === 0) {
+          errores.push(`Producto "${sub.nombre}" no encontrado.`);
+          continue;
+        }
+        productoId = productos[0].id;
+        sub.stock_anterior = productos[0].stock;
+      } else {
+        // Obtener stock actual del producto
+        const { data: producto } = await window.guajiroPC
+          .from('productos')
+          .select('stock')
+          .eq('id', productoId)
+          .single();
+        if (!producto) {
+          errores.push(`Producto "${sub.nombre}" no encontrado.`);
+          continue;
+        }
+        sub.stock_anterior = producto.stock;
+      }
+
+      const stockAnterior = sub.stock_anterior;
+      const cantidad = sub.cantidad;
+      const stockNuevo = stockAnterior - cantidad;
+
+      // Verificar stock suficiente
+      if (stockNuevo < 0) {
+        errores.push(`Stock insuficiente para "${sub.nombre}" (actual: ${stockAnterior}, necesario: ${cantidad}).`);
+        continue;
+      }
+
+      // Actualizar stock en la tabla productos
+      const { error: errUpdate } = await window.guajiroPC
+        .from('productos')
+        .update({ stock: stockNuevo })
+        .eq('id', productoId);
+
+      if (errUpdate) {
+        errores.push(`Error al actualizar stock de "${sub.nombre}": ${errUpdate.message}`);
+        continue;
+      }
+
+      // Registrar el movimiento en inventario_movimientos
+      const { error: errMov } = await window.guajiroPC
+        .from('inventario_movimientos')
+        .insert([{
+          producto_id: productoId,
+          cantidad: -cantidad,            // negativo = salida
+          tipo: 'venta',
+          motivo: `Pedido #${pedidoId}`,
+          pedido_id: pedidoId,
+          usuario: 'sistema',
+          stock_anterior: stockAnterior,
+          stock_nuevo: stockNuevo
+        }]);
+
+      if (errMov) {
+        errores.push(`Error al registrar movimiento de "${sub.nombre}": ${errMov.message}`);
+      }
+    }
+  }
+
+  if (errores.length > 0) {
+    console.error('Errores al descontar inventario:', errores);
+    alert('Se produjeron errores al descontar el inventario:\n' + errores.join('\n'));
+    return false;
+  }
+
+  return true;
+          }

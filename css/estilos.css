@@ -446,3 +446,17 @@ h1, h2, h3, h4, h5, .navbar-brand, .card-title, .offcanvas-title {
 .offcanvas .bg-body .text-muted {
   color: var(--text-secondary) !important;
 }
+
+.btn-outline-accent {
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  background: transparent;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.85rem;
+  border-radius: 4px;
+}
+.btn-outline-accent:hover {
+  background-color: var(--accent-btn);
+  color: var(--accent-text);
+  border-color: var(--accent-btn);
+}

@@ -4,12 +4,13 @@ window.pedidos = {
     container.innerHTML = `
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 style="color: var(--text-main);"><i class="bi bi-receipt"></i> Pedidos</h2>
-        <div class="d-flex flex-nowrap align-items-center gap-2 overflow-auto" style="max-width: 100%; scrollbar-width: none;">
+        <div class="d-flex flex-nowrap align-items-center gap-2" style="max-width: 100%;">
           <button class="btn btn-outline-accent btn-sm text-nowrap" id="btn-seleccionar-todos" onclick="window.pedidos.seleccionarTodos()">
             <i class="bi bi-check-square"></i> <span>Seleccionar todos</span>
           </button>
-          <button id="btn-eliminar-seleccionados" class="btn btn-outline-danger btn-sm text-nowrap d-none" onclick="window.pedidos.eliminarSeleccionados()">
-            <i class="bi bi-trash"></i> Eliminar (<span id="cantidad-seleccionados">0</span>)
+          <button id="btn-eliminar-seleccionados" class="btn btn-outline-danger btn-sm position-relative d-none" onclick="window.pedidos.eliminarSeleccionados()" title="Eliminar seleccionados">
+            <i class="bi bi-trash"></i>
+            <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle" id="cantidad-seleccionados">0</span>
           </button>
         </div>
       </div>
@@ -65,30 +66,45 @@ async function pedidosCargar() {
       cancelado: 'danger'
     }[p.estado] || 'secondary';
 
+    const estados = [
+      { valor: 'pendiente', icono: 'bi-hourglass-split', titulo: 'Pendiente' },
+      { valor: 'confirmado', icono: 'bi-check-circle', titulo: 'Confirmado' },
+      { valor: 'entregado', icono: 'bi-box-seam', titulo: 'Entregado' },
+      { valor: 'cancelado', icono: 'bi-x-circle', titulo: 'Cancelado' }
+    ];
+
     return `
-    <div class="list-item" style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; padding:0.8rem 1rem; margin-bottom:0.8rem; display:flex; align-items:flex-start; gap:0.8rem;">
-      <button class="btn btn-sm btn-outline-accent" style="flex-shrink:0; margin-top:0.2rem;" onclick="window.pedidos.togglePedido('${p.id}', this)" title="Seleccionar pedido">
-        <i class="bi ${estaSeleccionado ? 'bi-check-square-fill' : 'bi-square'}"></i>
-      </button>
-      <div style="flex-grow:1; text-align:left;">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-          <span class="item-name" style="font-weight:600; text-transform:uppercase;">${p.nombre}</span>
-          <span style="font-size:0.85rem; color:var(--text-secondary);">${new Date(p.created_at).toLocaleString()}</span>
-        </div>
-        <div style="font-size:0.85rem; color:var(--text-secondary);"><i class="bi bi-telephone"></i> ${p.telefono} · <i class="bi bi-geo-alt"></i> ${p.direccion}</div>
-        <div style="font-size:0.85rem; color:var(--text-secondary);">
-          <i class="bi bi-truck"></i> ${p.zona} · 
-          <i class="bi bi-cash"></i> ${p.metodo_pago} · 
-          <i class="bi bi-currency-exchange"></i> ${p.moneda || 'CUP'} · 
-          <strong>${parseFloat(p.total).toFixed(2)} ${p.moneda || 'CUP'}</strong>
-        </div>
-        <div class="mt-2">${items.map(i => `<span class="badge bg-secondary me-1">${i.cantidad}x ${i.nombre}</span>`).join('')}</div>
-        <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
-          <span class="badge bg-${badgeClass}">${p.estado}</span>
-          <button class="btn btn-sm btn-outline-accent" onclick="window.pedidos.cambiarEstado('${p.id}', 'pendiente')" title="Pendiente"><i class="bi bi-hourglass-split"></i></button>
-          <button class="btn btn-sm btn-outline-accent" onclick="window.pedidos.cambiarEstado('${p.id}', 'confirmado')" title="Confirmado"><i class="bi bi-check-circle"></i></button>
-          <button class="btn btn-sm btn-outline-accent" onclick="window.pedidos.cambiarEstado('${p.id}', 'entregado')" title="Entregado"><i class="bi bi-box-seam"></i></button>
-          <button class="btn btn-sm btn-outline-danger" onclick="window.pedidos.cambiarEstado('${p.id}', 'cancelado')" title="Cancelar"><i class="bi bi-x-circle"></i></button>
+    <div class="list-item" style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; padding:0.8rem 1rem; margin-bottom:0.8rem; text-align:left;">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <button class="btn btn-sm btn-outline-accent" onclick="window.pedidos.togglePedido('${p.id}', this)" title="Seleccionar pedido">
+          <i class="bi ${estaSeleccionado ? 'bi-check-square-fill' : 'bi-square'}"></i>
+        </button>
+        <span style="font-size:0.85rem; color:var(--text-secondary);">${new Date(p.created_at).toLocaleString()}</span>
+      </div>
+
+      <div class="item-name" style="font-weight:600; text-transform:uppercase;">${p.nombre}</div>
+      <div style="font-size:0.85rem; color:var(--text-secondary);"><i class="bi bi-telephone"></i> ${p.telefono}</div>
+      <div style="font-size:0.85rem; color:var(--text-secondary);"><i class="bi bi-geo-alt"></i> ${p.direccion}</div>
+      ${p.punto_referencia ? `<div style="font-size:0.85rem; color:var(--text-secondary);"><i class="bi bi-signpost-split"></i> ${p.punto_referencia}</div>` : ''}
+
+      <div class="mt-2">${items.map(i => `<span class="badge bg-secondary me-1">${i.cantidad}x ${i.nombre}</span>`).join('')}</div>
+      <div style="font-size:0.85rem; color:var(--text-secondary);" class="mt-1">
+        <strong>${parseFloat(p.total).toFixed(2)} ${p.moneda || 'CUP'}</strong>
+      </div>
+
+      <div style="font-size:0.85rem; color:var(--text-secondary);">
+        <i class="bi bi-cash"></i> ${p.metodo_pago}
+        ${p.cargo_domicilio ? ` · <i class="bi bi-truck"></i> Cargo domicilio: ${parseFloat(p.cargo_domicilio).toFixed(2)} ${p.moneda || 'CUP'}` : ''}
+      </div>
+
+      <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
+        <span class="badge bg-${badgeClass}">${p.estado}</span>
+        <div class="btn-group btn-group-sm" role="group">
+          ${estados.map(e => `
+            <button class="btn ${p.estado === e.valor ? 'btn-accent' : 'btn-outline-accent'}" onclick="window.pedidos.cambiarEstado('${p.id}', '${e.valor}')" title="${e.titulo}">
+              <i class="bi ${e.icono}"></i>
+            </button>
+          `).join('')}
         </div>
       </div>
     </div>`;
@@ -120,13 +136,15 @@ window.pedidos.seleccionarTodos = function() {
   if (window.pedidos.seleccionados.size === totalPedidos && totalPedidos > 0) {
     window.pedidos.seleccionados.clear();
     document.querySelectorAll('#pedidos-lista .list-item button').forEach(btn => {
-      btn.classList.remove('btn-accent');
-      btn.classList.add('btn-outline-accent');
-      btn.querySelector('i').className = 'bi bi-square';
+      if (btn.hasAttribute('onclick') && btn.getAttribute('onclick').includes('togglePedido')) {
+        btn.classList.remove('btn-accent');
+        btn.classList.add('btn-outline-accent');
+        btn.querySelector('i').className = 'bi bi-square';
+      }
     });
   } else {
     document.querySelectorAll('#pedidos-lista .list-item').forEach(item => {
-      const btn = item.querySelector('button');
+      const btn = item.querySelector('button[onclick*="togglePedido"]');
       const id = btn.getAttribute('onclick').match(/'([^']+)'/)[1];
       window.pedidos.seleccionados.add(id);
       btn.classList.remove('btn-outline-accent');
@@ -193,3 +211,4 @@ window.pedidos.cambiarEstado = async function(id, nuevoEstado) {
   await window.guajiroPC.from('pedidos').update({ estado: nuevoEstado }).eq('id', id);
   pedidosCargar();
 };
+

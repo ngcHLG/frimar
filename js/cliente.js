@@ -215,7 +215,7 @@ async function cargarCategorias() {
 async function cargarProductos() {
   const { data } = await supabaseClient
     .from('productos')
-    .select('*, categorias(nombre), stock')   // ← se añade 'stock'
+    .select('*, categorias(nombre), stock')
     .eq('activo', true)
     .order('nombre');
   if (data) todosProductos = data;
@@ -265,7 +265,7 @@ function renderCategorias() {
     html += `<button class="btn-categoria" onclick="filtrarPorCategoria('combos', this)">Combos</button>`;
   }
   const categoriasConProductos = todasCategorias.filter(cat =>
-    todosProductos.some(prod => prod.categoria_id === cat.id && obtenerPrecioNumerico(prod) > 0)
+    todosProductos.some(prod => prod.categoria_id === cat.id && obtenerPrecioNumerico(prod) > 0 && (prod.stock || 0) > 0)
   );
   categoriasConProductos.forEach(cat => {
     html += `<button class="btn-categoria" onclick="filtrarPorCategoria('${cat.id}', this)">${cat.nombre}</button>`;
@@ -308,7 +308,10 @@ function obtenerPrecioProducto(producto) {
 
 function renderProductos() {
   const container = document.getElementById('productos-container');
-  let productosFiltrados = todosProductos.filter(p => obtenerPrecioNumerico(p) !== null);
+  let productosFiltrados = todosProductos
+    .filter(p => obtenerPrecioNumerico(p) !== null)
+    .filter(p => (p.stock || 0) > 0); // ← OCULTA PRODUCTOS CON STOCK 0
+
   if (categoriaActiva !== 'todas') {
     productosFiltrados = productosFiltrados.filter(p => p.categoria_id === categoriaActiva);
   }
@@ -464,7 +467,7 @@ async function cargarCombosPublicos() {
         break;
       }
     }
-    if (!stockSuficiente) continue;
+    if (!stockSuficiente) continue; // ← OCULTA COMBO SI ALGÚN PRODUCTO NO TIENE STOCK SUFICIENTE
 
     const { items, originalTotal, finalPrice } = precioData;
     const listaProductos = items.map(i => `${i.cantidad}x ${i.productos.nombre}`).join(', ');
@@ -535,4 +538,4 @@ async function verificarHorario() {
 
   document.getElementById('horario-aviso').classList.toggle('d-none', horarioAbierto);
   document.getElementById('horario-texto').textContent = textoHorario;
-      }
+            }

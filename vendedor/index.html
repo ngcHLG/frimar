@@ -11,43 +11,101 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/estilos.css?v=2.0">
+  <style>
+    /* Íconos de sección en el navbar (punto de venta / pedidos / salir) */
+    .nav-icon-btn {
+      background: transparent;
+      border: none;
+      color: var(--nav-text);
+      opacity: 0.6;
+      font-size: 1.3rem;
+      line-height: 1;
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
+      transition: opacity 0.2s ease, background-color 0.2s ease;
+    }
+    .nav-icon-btn:hover { opacity: 1; background-color: rgba(255,255,255,0.08); }
+    .nav-icon-btn.active { opacity: 1; background-color: rgba(255,255,255,0.14); }
+  </style>
 </head>
 <body>
+
+  <!-- Pantalla de carga FRIMAR -->
+  <div id="splash-screen" class="splash">
+    <div class="splash-content">
+      <img src="../icon_regular_small.png" alt="FRIMAR" class="splash-logo">
+      <div class="splash-text">
+        <div class="splash-title">FRIMAR</div>
+        <div class="splash-slogan">Panel de Vendedor</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    setTimeout(function() {
+      var splash = document.getElementById('splash-screen');
+      if (splash) {
+        splash.style.opacity = '0';
+        setTimeout(function() { splash.remove(); }, 500);
+      }
+    }, 1200);
+  </script>
+
   <!-- Navegación -->
   <nav class="navbar navbar-dark sticky-top py-3">
-    <div class="container justify-content-between">
-      <a class="navbar-brand d-flex align-items-center" href="#"><img src="../icon_regular_small.png" alt="FRIMAR" style="height:30px;width:30px;object-fit:contain;margin-right:0.5rem;">FRIMAR</a>
-      <button class="btn btn-outline-accent btn-sm" onclick="cerrarSesion()"><i class="bi bi-box-arrow-right"></i> Salir</button>
+    <div class="container d-flex justify-content-between align-items-center">
+      <a class="navbar-brand d-flex align-items-center m-0" href="#">
+        <img src="../icon_regular_small.png" alt="FRIMAR" style="height: 30px; width: 30px; object-fit: contain; margin-right: 0.5rem;">
+        FRIMAR
+      </a>
+      <div class="d-flex align-items-center gap-1">
+        <button class="nav-icon-btn active" id="tab-punto-venta" title="Punto de venta" onclick="cambiarSeccion('punto-venta')">
+          <i class="bi bi-shop"></i>
+        </button>
+        <button class="nav-icon-btn" id="tab-pedidos" title="Pedidos" onclick="cambiarSeccion('pedidos')">
+          <i class="bi bi-receipt"></i>
+        </button>
+        <button class="nav-icon-btn" title="Salir" onclick="cerrarSesion()">
+          <i class="bi bi-box-arrow-right"></i>
+        </button>
+      </div>
     </div>
   </nav>
 
-  <!-- Pestañas -->
-  <div class="admin-tabs">
-    <div class="container d-flex gap-3">
-      <button class="tab-btn active" data-tab="punto-venta">Punto de venta</button>
-      <button class="tab-btn" data-tab="pedidos">Pedidos</button>
+  <!-- Categorías (solo visible en Punto de venta) -->
+  <div class="categorias-nav" id="categorias-nav">
+    <div class="container" id="categorias-container">
+      <span class="skeleton skeleton-chip"></span>
+      <span class="skeleton skeleton-chip"></span>
+      <span class="skeleton skeleton-chip"></span>
     </div>
   </div>
 
-  <!-- Aquí se inyecta dinámicamente: categorías + catálogo (punto-venta) o lista de pedidos -->
-  <main class="container my-4" id="main-content"></main>
+  <!-- Aviso de horario -->
+  <div id="horario-aviso" class="alert alert-secondary text-center mb-0 d-none rounded-0 border-0 border-bottom" role="alert">
+    <i class="bi bi-clock"></i> Fuera de servicio. <span id="horario-texto"></span>
+  </div>
 
-  <!-- FAB del carrito (siempre visible, aunque estemos en la pestaña de pedidos no molesta) -->
+  <!-- Contenedor Principal -->
+  <main class="container my-5">
+    <div id="seccion-container"></div>
+  </main>
+
+  <!-- FABs -->
   <div class="fab-container">
+    <button id="btn-currency-toggle" class="fab-btn" aria-label="Cambiar moneda" title="Cambiar moneda">
+      <span id="current-currency-label" style="font-size: 0.9rem; font-weight: bold;">CUP</span>
+    </button>
+    <button id="btn-theme-toggle" class="fab-btn" aria-label="Alternar Tema">
+      <i class="bi bi-moon-stars-fill" id="theme-icon"></i>
+    </button>
     <button id="btn-cart-fab" class="fab-btn" data-bs-toggle="offcanvas" data-bs-target="#carritoOffcanvas" aria-label="Ver venta actual">
       <i class="bi bi-cart3"></i>
       <span id="cart-badge">0</span>
     </button>
   </div>
 
-  <!-- Elementos "stub" ocultos: existen en el DOM para que cliente.js no falle,
-       pero el vendedor no interactúa con ellos (moneda fija, sin tema, sin aviso de horario visible) -->
-  <div style="display: none;">
-    <button id="btn-currency-toggle" class="fab-btn"><span id="current-currency-label">CUP</span></button>
-    <button id="btn-theme-toggle" class="fab-btn"><i id="theme-icon"></i></button>
-    <div class="moneda-list" id="moneda-list"></div>
-    <div id="horario-aviso" class="d-none"><span id="horario-texto"></span></div>
-  </div>
+  <!-- Lista de monedas -->
+  <div class="moneda-list" id="moneda-list"></div>
 
   <!-- Offcanvas Carrito (venta actual) -->
   <div class="offcanvas offcanvas-end" tabindex="-1" id="carritoOffcanvas">
@@ -59,7 +117,8 @@
       <div id="carrito-lista" class="list-group mb-3 flex-grow-1 overflow-auto" style="max-height: calc(100vh - 380px); min-height: 200px;"></div>
 
       <div class="mt-auto">
-        <!-- Método de pago y reparto quedan ocultos por sobrescribir.js, pero deben existir en el DOM -->
+        <!-- Método de pago y reparto: existen para que cliente.js/carrito.js no fallen,
+             pero se ocultan porque en el punto de venta se cobra con su propio modal -->
         <div class="mb-3 d-none" id="metodo-pago-container">
           <label class="form-label fw-bold">Método de pago</label>
           <select id="metodo-pago" class="form-select" onchange="actualizarCarrito()">
@@ -166,47 +225,74 @@
   <script src="pedido.js"></script>
   <script src="pedidos.js"></script>
 
-  <!-- 6. Control de pestañas -->
+  <!-- 6. Tema, moneda y control de secciones -->
   <script>
-    const tabs = document.querySelectorAll('.tab-btn');
-    const main = document.getElementById('main-content');
+    // ── Tema con persistencia (idéntico al cliente) ──
+    const btnThemeToggle = document.getElementById('btn-theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+
+    function aplicarTema(tema) {
+      document.documentElement.setAttribute('data-theme', tema);
+      themeIcon.className = tema === 'light' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
+      localStorage.setItem('frimar-theme', tema);
+    }
+
+    const temaGuardado = localStorage.getItem('frimar-theme') || 'light';
+    aplicarTema(temaGuardado);
+
+    btnThemeToggle.addEventListener('click', () => {
+      const actual = document.documentElement.getAttribute('data-theme');
+      aplicarTema(actual === 'light' ? 'dark' : 'light');
+    });
+
+    // ── Control de secciones (Punto de venta / Pedidos) ──
     let intervalPedidos = null;
 
-    async function cargarSeccion(tab) {
-      const id = tab.dataset.tab;
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      main.innerHTML = '';
+    async function cambiarSeccion(id) {
+      document.getElementById('tab-punto-venta').classList.toggle('active', id === 'punto-venta');
+      document.getElementById('tab-pedidos').classList.toggle('active', id === 'pedidos');
 
       if (intervalPedidos) { clearInterval(intervalPedidos); intervalPedidos = null; }
 
-      if (id === 'punto-venta') {
-        // Estructura mínima que cliente.js necesita para pintar categorías y productos
-        main.innerHTML = `
-          <div class="categorias-nav" style="position: static;">
-            <div class="container" id="categorias-container"></div>
-          </div>
-          <div id="productos-container" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mt-3"></div>
-        `;
+      const catNav = document.getElementById('categorias-nav');
+      const seccion = document.getElementById('seccion-container');
 
-        await cargarMonedas();           // versión sobrescrita
+      if (id === 'punto-venta') {
+        catNav.classList.remove('d-none');
+        seccion.innerHTML = `
+          <h2 class="mb-4 d-flex align-items-center gap-2">
+            <i class="bi bi-shop text-secondary"></i> Punto de Venta
+          </h2>
+          <div id="productos-container" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            <div class="col"><div class="skeleton skeleton-card"></div></div>
+            <div class="col"><div class="skeleton skeleton-card"></div></div>
+            <div class="col"><div class="skeleton skeleton-card"></div></div>
+            <div class="col"><div class="skeleton skeleton-card"></div></div>
+          </div>
+        `;
+        await cargarMonedas();
         await cargarConfiguracion();
         await cargarCategorias();
         await cargarProductos();
         await verificarCombosActivos();
-        await cargarRepartosEnvio();     // sobrescrita: no aplica reparto en tienda
+        await cargarRepartosEnvio();
         renderCategorias();
         await verificarHorario();
         renderProductos();
-        // El botón "Cobrar pedido" y la ocultación de secciones ya los maneja sobrescribir.js
-      } else if (id === 'pedidos') {
-        window.pedidos.init(main);
-        intervalPedidos = setInterval(() => window.pedidos.init(main), 30000);
+      } else {
+        catNav.classList.add('d-none');
+        document.getElementById('horario-aviso').classList.add('d-none');
+        seccion.innerHTML = '';
+        window.pedidos.init(seccion);
+        intervalPedidos = setInterval(() => window.pedidos.init(seccion), 30000);
       }
     }
 
-    tabs.forEach(tab => tab.addEventListener('click', () => cargarSeccion(tab)));
-    cargarSeccion(document.querySelector('[data-tab="punto-venta"]'));
+    // ── Inicialización ──
+    (async () => {
+      configurarSelectorMoneda();
+      await cambiarSeccion('punto-venta');
+    })();
   </script>
 </body>
 </html>

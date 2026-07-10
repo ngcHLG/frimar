@@ -3,41 +3,19 @@
 // 1. Usar la sesión del vendedor en lugar de la del cliente
 supabaseClient = window.vendedorSupabase;
 
-// 2. Redefinir funciones que dependen de elementos del DOM que no existen en el vendedor
-//    o que deben comportarse diferente.
-
-// cargarMonedas sin manipular el DOM de los FABs visibles del cliente
-async function cargarMonedas() {
-  const { data } = await supabaseClient.from('monedas').select('codigo').eq('activo', true).order('codigo');
-  if (data && data.length > 0) {
-    monedasDisponibles = data.map(m => m.codigo);
-  } else {
-    monedasDisponibles = ['CUP'];
-  }
-  const savedCurrency = localStorage.getItem('frimar-currency');
-  if (savedCurrency && monedasDisponibles.includes(savedCurrency)) {
-    monedaActiva = savedCurrency;
-  } else {
-    monedaActiva = monedasDisponibles[0];
-    localStorage.setItem('frimar-currency', monedaActiva);
-  }
-  // No generamos botones de moneda ni modal: el vendedor no cambia de moneda
-}
-
-// Vaciamos estas funciones para que no causen errores si son llamadas
-generarBotonesMoneda = function() {};
-configurarSelectorMoneda = function() {};
-cambiarMoneda = function() {}; // no permitimos cambiar moneda desde el vendedor
-inyectarModalCambioMoneda = function() {};
-
-// El punto de venta no maneja repartos/envío a domicilio
+// 2. El punto de venta no maneja repartos/envío a domicilio.
+//    (sobrescribimos ANTES de que cliente.js la llame, para evitar tocar
+//    el <datalist id="repartos-list"> que no existe en este panel)
 async function cargarRepartosEnvio() {
   window._repartosData = [];
 }
 
-window.seleccionarReparto = function() {
-  // no-op: el reparto no aplica en venta de tienda
-};
+// NOTA: a diferencia de versiones anteriores, aquí NO anulamos
+// generarBotonesMoneda, configurarSelectorMoneda, cambiarMoneda ni
+// inyectarModalCambioMoneda: el vendedor ahora sí puede cambiar de
+// moneda igual que el cliente, usando las funciones originales de
+// cliente.js (los elementos #btn-currency-toggle, #moneda-list y
+// #current-currency-label ya existen y son visibles en este panel).
 
 // 3. Cambiar el botón "Proceder al Pago" por "Cobrar pedido" y abrir el modal de cobro
 document.addEventListener('DOMContentLoaded', function() {

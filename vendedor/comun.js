@@ -1,8 +1,9 @@
-// comun.js - Vendedor
-const SUPABASE_URL = 'https://xntjoyqwxqmjfdltydol.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_j1aIGvPLNaTTAbvlygmqzQ_-mCoDRBY';
-
-window.vendedorSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// comun.js - Vendedor (sin redeclarar SUPABASE_URL)
+// Usa las credenciales ya definidas en ../js/config.js, pero crea su propio cliente
+window.vendedorSupabase = supabase.createClient(
+  'https://xntjoyqwxqmjfdltydol.supabase.co',
+  'sb_publishable_j1aIGvPLNaTTAbvlygmqzQ_-mCoDRBY'
+);
 
 async function verificarSesion() {
   const { data: { session } } = await window.vendedorSupabase.auth.getSession();

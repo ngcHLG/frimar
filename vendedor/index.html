@@ -30,26 +30,6 @@
 </head>
 <body>
 
-  <!-- Pantalla de carga FRIMAR -->
-  <div id="splash-screen" class="splash">
-    <div class="splash-content">
-      <img src="../icon_regular_small.png" alt="FRIMAR" class="splash-logo">
-      <div class="splash-text">
-        <div class="splash-title">FRIMAR</div>
-        <div class="splash-slogan">Panel de Vendedor</div>
-      </div>
-    </div>
-  </div>
-  <script>
-    setTimeout(function() {
-      var splash = document.getElementById('splash-screen');
-      if (splash) {
-        splash.style.opacity = '0';
-        setTimeout(function() { splash.remove(); }, 500);
-      }
-    }, 1200);
-  </script>
-
   <!-- Navegación -->
   <nav class="navbar navbar-dark sticky-top py-3">
     <div class="container d-flex justify-content-between align-items-center">
@@ -117,8 +97,8 @@
       <div id="carrito-lista" class="list-group mb-3 flex-grow-1 overflow-auto" style="max-height: calc(100vh - 380px); min-height: 200px;"></div>
 
       <div class="mt-auto">
-        <!-- Método de pago y reparto: existen para que cliente.js/carrito.js no fallen,
-             pero se ocultan porque en el punto de venta se cobra con su propio modal -->
+        <!-- Método de pago: se muestra solo si la moneda activa admite
+             más de un método (lo controla cliente.js, sin overrides) -->
         <div class="mb-3 d-none" id="metodo-pago-container">
           <label class="form-label fw-bold">Método de pago</label>
           <select id="metodo-pago" class="form-select" onchange="actualizarCarrito()">
@@ -128,6 +108,8 @@
           <small id="recargo-info" class="text-muted mt-1 d-none"></small>
         </div>
 
+        <!-- Reparto: existe en el DOM para que cliente.js/carrito.js no
+             fallen, pero sobrescribir.js lo mantiene siempre oculto -->
         <div class="mb-3 d-none" id="reparto-container">
           <label class="form-label fw-bold">Reparto</label>
           <input type="text" class="form-control" list="repartos-list" id="reparto-input" placeholder="Buscar reparto..." onchange="seleccionarReparto(this.value)">
@@ -165,23 +147,6 @@
     </div>
   </div>
 
-  <!-- Modal de cobro -->
-  <div class="modal fade" id="cobroModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title">Cobrar pedido</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body">
-          <div class="mb-3"><label class="form-label">Nombre del cliente (opcional)</label><input type="text" class="form-control" id="cobro-nombre" placeholder="Cliente de tienda"></div>
-          <div class="mb-3"><label class="form-label">Método de pago</label><select class="form-select" id="cobro-metodo"><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia</option></select></div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-accent btn-sm" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" class="btn btn-accent btn-sm" id="btn-cobrar">Cobrar</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Contenedor Toasts -->
   <div aria-live="polite" aria-atomic="true" style="position: fixed; bottom: 20px; left: 20px; right: 20px; z-index: 1060; display: flex; justify-content: center; pointer-events: none; flex-direction: column; align-items: center; gap: 10px;">
     <!-- Toast de venta exitosa -->
@@ -211,7 +176,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <!-- 2. comun.js del vendedor (crea vendedorSupabase) -->
-  <script src="comun.js?v=2.2"></script>
+  <script src="comun.js?v=2.3"></script>
 
   <!-- 3. Scripts del cliente original -->
   <script src="../js/config.js?v=2.1"></script>
@@ -219,10 +184,10 @@
   <script src="../js/carrito.js?v=2.1"></script>
 
   <!-- 4. Adaptación para el vendedor -->
-  <script src="sobrescribir.js?v=2.1"></script>
+  <script src="sobrescribir.js?v=2.3"></script>
 
   <!-- 5. Lógica de cobro y pedidos -->
-  <script src="pedido.js?v=2.1"></script>
+  <script src="pedido.js?v=2.3"></script>
   <script src="pedidos.js?v=2.1"></script>
 
   <!-- 6. Tema, moneda y control de secciones -->

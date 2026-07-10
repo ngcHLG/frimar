@@ -2,8 +2,6 @@
 // Confirmación de pedido y envío de notificación (offcanvas de facturación)
 
 function configurarBotonPedido() {
-  // El botón "Proceder al Pago" ya tiene data-bs-target="#facturacionOffcanvas"
-  // pero añadimos un listener para cerrar el carrito antes
   document.getElementById('btn-checkout').addEventListener('click', () => {
     if (carrito.length === 0) return;
     const carritoOffcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('carritoOffcanvas'));
@@ -42,6 +40,40 @@ async function confirmarPedido() {
     total += envio;
   }
 
+  // ── Construir items con producto_id y expandir combos ──
+  const itemsPedido = carrito.map(item => {
+    if (item.esCombo) {
+      // Combo: expandir subitems con sus IDs
+      const subitems = (item.items || []).map(sub => ({
+        producto_id: sub.producto_id,
+        nombre: sub.nombre,
+        cantidad: sub.cantidad * item.cantidad  // cantidad total
+      }));
+      return {
+        nombre: item.nombre,
+        precio: item.precio,
+        moneda: item.moneda || monedaActiva,
+        cantidad: item.cantidad,
+        extras: item.extras || null,
+        esCombo: true,
+        items: subitems
+      };
+    } else {
+      // Producto simple: guardar producto_id
+      const producto = todosProductos.find(p => p.id === item.id);
+      return {
+        producto_id: producto ? producto.id : null,
+        nombre: item.nombre,
+        precio: item.precio,
+        moneda: item.moneda || monedaActiva,
+        cantidad: item.cantidad,
+        extras: item.extras || null,
+        esCombo: false,
+        items: null
+      };
+    }
+  });
+
   const pedidoData = {
     nombre,
     telefono,
@@ -53,14 +85,7 @@ async function confirmarPedido() {
     envio: envio,
     recargo: recargo,
     total,
-    items: carrito.map(item => ({
-      nombre: item.nombre,
-      precio: item.precio,
-      moneda: item.moneda || monedaActiva,
-      cantidad: item.cantidad,
-      extras: item.extras || null,
-      esCombo: item.esCombo || false
-    })),
+    items: itemsPedido,
     estado: 'pendiente'
   };
 

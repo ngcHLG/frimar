@@ -48,7 +48,52 @@ function modalConfirmacionHTML() {
     </div>`;
 }
 
+function pedidoNotaStyleTag() {
+  if (document.getElementById('pedido-nota-style')) return;
+  const style = document.createElement('style');
+  style.id = 'pedido-nota-style';
+  style.textContent = `
+    .pedido-nota {
+      display: block;
+      width: 100%;
+      background: var(--bg-surface);
+      border: 1px dashed var(--border-color);
+      border-radius: 4px;
+      padding: 0.9rem 1rem;
+      margin-bottom: 1rem;
+      font-family: 'Courier New', Courier, monospace;
+      text-align: left;
+    }
+    .pedido-nota__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed var(--border-color);
+      padding-bottom: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .pedido-nota__check {
+      background: none;
+      border: none;
+      padding: 0;
+      line-height: 1;
+      font-size: 1.3rem;
+      color: var(--text-secondary);
+    }
+    .pedido-nota__check.is-checked { color: var(--accent, #2c5f6f); }
+    .pedido-nota__fecha { font-size: 0.8rem; color: var(--text-secondary); }
+    .pedido-nota__linea { display: block; width: 100%; font-size: 0.9rem; margin-bottom: 0.35rem; }
+    .pedido-nota__linea i { width: 1.1rem; display: inline-block; color: var(--text-secondary); }
+    .pedido-nota__items { border-top: 1px dashed var(--border-color); margin-top: 0.4rem; padding-top: 0.4rem; }
+    .pedido-nota__item-row { display: flex; justify-content: space-between; font-size: 0.9rem; }
+    .pedido-nota__total { display: flex; justify-content: space-between; font-weight: 700; border-top: 1px dashed var(--border-color); margin-top: 0.4rem; padding-top: 0.4rem; }
+    .pedido-nota__footer { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.6rem; }
+  `;
+  document.head.appendChild(style);
+}
+
 async function pedidosCargar() {
+  pedidoNotaStyleTag();
   const { data } = await window.guajiroPC.from('pedidos').select('*').order('created_at', { ascending: false });
   const cont = document.getElementById('pedidos-lista');
   if (!data || data.length === 0) {
@@ -74,30 +119,30 @@ async function pedidosCargar() {
     ];
 
     return `
-    <div class="list-item" style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; padding:0.8rem 1rem; margin-bottom:0.8rem; text-align:left;">
-      <div class="d-flex justify-content-between align-items-start mb-2">
-        <button class="btn btn-sm btn-outline-accent" onclick="window.pedidos.togglePedido('${p.id}', this)" title="Seleccionar pedido">
+    <div class="pedido-nota" data-pedido-id="${p.id}">
+      <div class="pedido-nota__header">
+        <button class="pedido-nota__check ${estaSeleccionado ? 'is-checked' : ''}" onclick="window.pedidos.togglePedido('${p.id}', this)" title="Seleccionar pedido">
           <i class="bi ${estaSeleccionado ? 'bi-check-square-fill' : 'bi-square'}"></i>
         </button>
-        <span style="font-size:0.85rem; color:var(--text-secondary);">${new Date(p.created_at).toLocaleString()}</span>
+        <span class="pedido-nota__fecha">${new Date(p.created_at).toLocaleString()}</span>
       </div>
 
-      <div class="item-name" style="font-weight:600; text-transform:uppercase;">${p.nombre}</div>
-      <div style="font-size:0.85rem; color:var(--text-secondary);"><i class="bi bi-telephone"></i> ${p.telefono}</div>
-      <div style="font-size:0.85rem; color:var(--text-secondary);"><i class="bi bi-geo-alt"></i> ${p.direccion}</div>
-      ${p.punto_referencia ? `<div style="font-size:0.85rem; color:var(--text-secondary);"><i class="bi bi-signpost-split"></i> ${p.punto_referencia}</div>` : ''}
+      <span class="pedido-nota__linea" style="font-weight:600; text-transform:uppercase;">${p.nombre}</span>
+      <span class="pedido-nota__linea"><i class="bi bi-telephone"></i> ${p.telefono}</span>
+      <span class="pedido-nota__linea"><i class="bi bi-geo-alt"></i> ${p.direccion}</span>
+      ${p.punto_referencia ? `<span class="pedido-nota__linea"><i class="bi bi-signpost-split"></i> ${p.punto_referencia}</span>` : ''}
 
-      <div class="mt-2">${items.map(i => `<span class="badge bg-secondary me-1">${i.cantidad}x ${i.nombre}</span>`).join('')}</div>
-      <div style="font-size:0.85rem; color:var(--text-secondary);" class="mt-1">
-        <strong>${parseFloat(p.total).toFixed(2)} ${p.moneda || 'CUP'}</strong>
+      <div class="pedido-nota__items">
+        ${items.map(i => `<div class="pedido-nota__item-row"><span>${i.cantidad}x ${i.nombre}</span></div>`).join('')}
+      </div>
+      <div class="pedido-nota__total">
+        <span>Total</span>
+        <span>${parseFloat(p.total).toFixed(2)} ${p.moneda || 'CUP'}</span>
       </div>
 
-      <div style="font-size:0.85rem; color:var(--text-secondary);">
-        <i class="bi bi-cash"></i> ${p.metodo_pago}
-        ${p.cargo_domicilio ? ` · <i class="bi bi-truck"></i> Cargo domicilio: ${parseFloat(p.cargo_domicilio).toFixed(2)} ${p.moneda || 'CUP'}` : ''}
-      </div>
+      <span class="pedido-nota__linea mt-2"><i class="bi bi-cash"></i> ${p.metodo_pago}${p.cargo_domicilio ? ` · Cargo domicilio: ${parseFloat(p.cargo_domicilio).toFixed(2)} ${p.moneda || 'CUP'}` : ''}</span>
 
-      <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
+      <div class="pedido-nota__footer">
         <span class="badge bg-${badgeClass}">${p.estado}</span>
         <div class="btn-group btn-group-sm" role="group">
           ${estados.map(e => `
@@ -118,13 +163,11 @@ async function pedidosCargar() {
 window.pedidos.togglePedido = function(id, boton) {
   if (window.pedidos.seleccionados.has(id)) {
     window.pedidos.seleccionados.delete(id);
-    boton.classList.remove('btn-accent');
-    boton.classList.add('btn-outline-accent');
+    boton.classList.remove('is-checked');
     boton.querySelector('i').className = 'bi bi-square';
   } else {
     window.pedidos.seleccionados.add(id);
-    boton.classList.remove('btn-outline-accent');
-    boton.classList.add('btn-accent');
+    boton.classList.add('is-checked');
     boton.querySelector('i').className = 'bi bi-check-square-fill';
   }
   window.pedidos.actualizarBotonEliminar();
@@ -132,23 +175,19 @@ window.pedidos.togglePedido = function(id, boton) {
 };
 
 window.pedidos.seleccionarTodos = function() {
-  const totalPedidos = document.querySelectorAll('#pedidos-lista .list-item').length;
+  const totalPedidos = document.querySelectorAll('#pedidos-lista .pedido-nota').length;
   if (window.pedidos.seleccionados.size === totalPedidos && totalPedidos > 0) {
     window.pedidos.seleccionados.clear();
-    document.querySelectorAll('#pedidos-lista .list-item button').forEach(btn => {
-      if (btn.hasAttribute('onclick') && btn.getAttribute('onclick').includes('togglePedido')) {
-        btn.classList.remove('btn-accent');
-        btn.classList.add('btn-outline-accent');
-        btn.querySelector('i').className = 'bi bi-square';
-      }
+    document.querySelectorAll('#pedidos-lista .pedido-nota__check').forEach(btn => {
+      btn.classList.remove('is-checked');
+      btn.querySelector('i').className = 'bi bi-square';
     });
   } else {
-    document.querySelectorAll('#pedidos-lista .list-item').forEach(item => {
-      const btn = item.querySelector('button[onclick*="togglePedido"]');
-      const id = btn.getAttribute('onclick').match(/'([^']+)'/)[1];
+    document.querySelectorAll('#pedidos-lista .pedido-nota').forEach(item => {
+      const id = item.getAttribute('data-pedido-id');
+      const btn = item.querySelector('.pedido-nota__check');
       window.pedidos.seleccionados.add(id);
-      btn.classList.remove('btn-outline-accent');
-      btn.classList.add('btn-accent');
+      btn.classList.add('is-checked');
       btn.querySelector('i').className = 'bi bi-check-square-fill';
     });
   }
@@ -171,7 +210,7 @@ window.pedidos.actualizarBotonSeleccionarTodos = function() {
   const btn = document.getElementById('btn-seleccionar-todos');
   const icono = btn.querySelector('i');
   const texto = btn.querySelector('span');
-  const totalPedidos = document.querySelectorAll('#pedidos-lista .list-item').length;
+  const totalPedidos = document.querySelectorAll('#pedidos-lista .pedido-nota').length;
   if (totalPedidos > 0 && window.pedidos.seleccionados.size === totalPedidos) {
     btn.classList.add('btn-accent');
     icono.className = 'bi bi-check-square-fill';

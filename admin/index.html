@@ -286,7 +286,7 @@
 
       // Detener la sección anterior (limpia intervalos, listeners, etc.)
       if (currentSectionId && currentSectionId !== id && typeof window[currentSectionId]?.destroy === 'function') {
-        window[currentSectionId].destroy();
+        window[currentSectionId].destroy();}
 
       // Actualizar tabs
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));

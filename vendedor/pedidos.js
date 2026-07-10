@@ -22,6 +22,7 @@ async function procesarCobro() {
     moneda: monedaActiva,
     zona: 'Venta en tienda',
     envio: 0,
+    recargo: recargo,
     total,
     items: carrito.map(item => ({
       nombre: item.nombre,
@@ -169,6 +170,7 @@ async function pedidosCargar() {
 
     const subtotal = items.reduce((sum, i) => sum + (parseFloat(i.precio) * i.cantidad), 0);
     const envio = parseFloat(p.envio) || 0;
+    const recargo = parseFloat(p.recargo) || 0;
     const moneda = p.moneda || 'CUP';
 
     const estados = [
@@ -191,9 +193,10 @@ async function pedidosCargar() {
 
       <div class="pedido-nota__items">
         ${items.map(i => `<div class="pedido-nota__item-row"><span>${i.cantidad}x ${i.nombre}</span><span>${(i.precio * i.cantidad).toFixed(2)}</span></div>`).join('')}
-        ${envio > 0 ? `
+        ${(envio > 0 || recargo > 0) ? `
           <div class="pedido-nota__desglose"><span>Subtotal</span><span>${subtotal.toFixed(2)} ${moneda}</span></div>
-          <div class="pedido-nota__desglose"><span>Envío</span><span>${envio.toFixed(2)} ${moneda}</span></div>
+          ${recargo > 0 ? `<div class="pedido-nota__desglose"><span>Recargo</span><span>${recargo.toFixed(2)} ${moneda}</span></div>` : ''}
+          ${envio > 0 ? `<div class="pedido-nota__desglose"><span>Envío</span><span>${envio.toFixed(2)} ${moneda}</span></div>` : ''}
         ` : ''}
       </div>
 

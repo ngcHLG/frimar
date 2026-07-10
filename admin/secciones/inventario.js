@@ -191,9 +191,10 @@ window.inventario = {
 
     const cantidadReal = tipo === 'añadir' ? cantidad : -cantidad;
 
+    // Obtener producto y su nombre para la notificación
     const { data: producto, error: errGet } = await window.guajiroPC
       .from('productos')
-      .select('stock')
+      .select('nombre, stock')
       .eq('id', productoId)
       .single();
 
@@ -202,6 +203,7 @@ window.inventario = {
       return;
     }
 
+    const nombreProducto = producto.nombre;
     const stockAnterior = producto.stock;
     const stockNuevo = stockAnterior + cantidadReal;
     if (stockNuevo < 0) {
@@ -235,6 +237,9 @@ window.inventario = {
     if (errMov) {
       alert('Stock actualizado pero no se registró el movimiento: ' + errMov.message);
     }
+
+    // ─── NOTIFICACIÓN DE STOCK BAJO (dinámico) ───
+    await window.notificarStockBajo(productoId, nombreProducto, stockNuevo);
 
     bootstrap.Modal.getInstance(document.getElementById('invAjusteModal')).hide();
     this.cargarProductos();
@@ -287,4 +292,4 @@ function modalAjusteHTML() {
       </div>
     </div>
   `;
-      }
+}

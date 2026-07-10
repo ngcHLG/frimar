@@ -79,7 +79,21 @@
       background-color: var(--accent-btn); color: var(--accent-text); border-color: var(--accent-btn);
     }
 
+    .btn-nav-logout {
+      color: var(--nav-text);
+      border: 1px solid var(--nav-text);
+      background: transparent;
+      font-size: 1.1rem;
+      line-height: 1;
+      padding: 0.3rem 0.5rem;
+    }
+    .btn-nav-logout:hover {
+      background-color: var(--nav-text);
+      color: var(--nav-bg);
+    }
+
     /* Tabs */
+    
     .admin-tabs {
       background-color: var(--bg-surface);
       border-bottom: 1px solid var(--border-color);
@@ -200,8 +214,8 @@
         <img src="../icon_regular_small.png" alt="FRIMAR" style="height: 28px; width: 28px; object-fit: contain; margin-right: 0.5rem;">
         FRIMAR
       </a>
-      <button class="btn btn-outline-accent btn-sm" onclick="cerrarSesion()">
-        <i class="bi bi-box-arrow-right"></i> Salir
+      <button class="btn btn-sm btn-nav-logout" onclick="cerrarSesion()" title="Salir" aria-label="Salir">
+        <i class="bi bi-box-arrow-right"></i>
       </button>
     </div>
   </nav>

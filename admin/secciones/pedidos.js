@@ -2,41 +2,42 @@
 window.pedidos = {
   init: async function(container) {
     container.innerHTML = `
-  <h2 class="mb-3" style="color: var(--text-main);"><i class="bi bi-receipt"></i> Pedidos</h2>
+      <h2 class="mb-3" style="color: var(--text-main);"><i class="bi bi-receipt"></i> Pedidos</h2>
 
-  <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
-    <div class="d-flex flex-wrap align-items-end gap-2">
-      <div>
-        <label class="form-label small mb-1" style="color: var(--text-secondary);">Desde</label>
-        <input type="date" class="form-control form-control-sm" id="ped-fecha-desde">
+      <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
+        <div class="d-flex flex-wrap align-items-end gap-2">
+          <div>
+            <label class="form-label small mb-1" style="color: var(--text-secondary);">Desde</label>
+            <input type="date" class="form-control form-control-sm" id="ped-fecha-desde">
+          </div>
+          <div>
+            <label class="form-label small mb-1" style="color: var(--text-secondary);">Hasta</label>
+            <input type="date" class="form-control form-control-sm" id="ped-fecha-hasta">
+          </div>
+        </div>
+        <div class="d-flex flex-nowrap align-items-center gap-2">
+          <button class="btn btn-outline-accent btn-sm text-nowrap" id="btn-seleccionar-todos" onclick="window.pedidos.seleccionarTodos()">
+            <i class="bi bi-check-square"></i> <span>Seleccionar</span>
+          </button>
+          <button id="btn-eliminar-seleccionados" class="btn btn-outline-danger btn-sm position-relative d-none" onclick="window.pedidos.eliminarSeleccionados()" title="Eliminar seleccionados">
+            <i class="bi bi-trash"></i>
+            <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle" id="cantidad-seleccionados">0</span>
+          </button>
+        </div>
       </div>
-      <div>
-        <label class="form-label small mb-1" style="color: var(--text-secondary);">Hasta</label>
-        <input type="date" class="form-control form-control-sm" id="ped-fecha-hasta">
-      </div>
-    </div>
-    <div class="d-flex flex-nowrap align-items-center gap-2">
-      <button class="btn btn-outline-accent btn-sm text-nowrap" id="btn-seleccionar-todos" onclick="window.pedidos.seleccionarTodos()">
-        <i class="bi bi-check-square"></i> <span>Seleccionar</span>
-      </button>
-      <button id="btn-eliminar-seleccionados" class="btn btn-outline-danger btn-sm position-relative d-none" onclick="window.pedidos.eliminarSeleccionados()" title="Eliminar seleccionados">
-        <i class="bi bi-trash"></i>
-        <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle" id="cantidad-seleccionados">0</span>
-      </button>
-    </div>
-  </div>
 
-  <div id="pedidos-lista" class="mt-3"></div>
-  ${modalConfirmacionHTML()}
-`;
+      <div id="pedidos-lista" class="mt-3"></div>
+      ${modalConfirmacionHTML()}
+    `;
 
-this.seleccionados = new Set();
+    this.seleccionados = new Set();
 
-document.getElementById('ped-fecha-desde').addEventListener('change', () => pedidosCargar());
-document.getElementById('ped-fecha-hasta').addEventListener('change', () => pedidosCargar());
+    document.getElementById('ped-fecha-desde').addEventListener('change', () => pedidosCargar());
+    document.getElementById('ped-fecha-hasta').addEventListener('change', () => pedidosCargar());
 
-await pedidosCargar();
-this.interval = setInterval(pedidosCargar, 30000);
+    await pedidosCargar();
+    this.interval = setInterval(pedidosCargar, 30000);
+  },
   destroy: function() {
     if (this.interval) clearInterval(this.interval);
   }

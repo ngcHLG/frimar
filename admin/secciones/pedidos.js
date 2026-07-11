@@ -298,24 +298,44 @@ window.pedidos.eliminarSeleccionados = function() {
   };
 };
 
-// ─── Cambios de estado (MODIFICADO para inventario) ───
+// ─── Función de notificación de stock (local, por si no existe globalmente) ───
+if (typeof window.notificarStockBajo !== 'function') {
+  window.notificarStockBajo = async function(productoId, nombreProducto, stockNuevo) {
+    try {
+      console.log(`[Stock] ${nombreProducto} ahora tiene ${stockNuevo} unidades.`);
+      // Aquí puedes añadir lógica de notificación (ej. ntfy)
+    } catch (e) {
+      console.warn('Error en notificación de stock:', e);
+    }
+  };
+}
+
+// ─── Cambios de estado ───
 window.pedidos.cambiarEstado = async function(id, nuevoEstado) {
-  // Si el nuevo estado es 'entregado', primero descontamos el stock
+  console.log(`[Pedido] Cambiando estado de ${id} a ${nuevoEstado}`);
   if (nuevoEstado === 'entregado') {
     const ok = await descontarStockDePedido(id);
     if (!ok) {
       alert('No se pudo descontar el inventario. Revisa el stock de los productos.');
-      return;   // no cambiamos el estado
+      return;
     }
   }
 
-  await window.guajiroPC.from('pedidos').update({ estado: nuevoEstado }).eq('id', id);
+  const { error } = await window.guajiroPC
+    .from('pedidos')
+    .update({ estado: nuevoEstado })
+    .eq('id', id);
+
+  if (error) {
+    alert('Error al cambiar estado: ' + error.message);
+    return;
+  }
   pedidosCargar();
 };
 
-// ─── Función de descuento de inventario con notificación de stock bajo ───
+// ─── Función de descuento de inventario (mejorada) ───
 async function descontarStockDePedido(pedidoId) {
-  // Obtener el pedido
+  console.log(`[Inventario] Iniciando descuento para pedido ${pedidoId}`);
   const { data: pedido, error: errPedido } = await window.guajiroPC
     .from('pedidos')
     .select('items, estado')
@@ -323,29 +343,31 @@ async function descontarStockDePedido(pedidoId) {
     .single();
 
   if (errPedido || !pedido) {
-    console.error('No se pudo obtener el pedido', errPedido);
+    console.error('[Inventario] Error al obtener pedido:', errPedido);
+    alert('Error al obtener el pedido: ' + (errPedido?.message || 'Desconocido'));
     return false;
   }
 
-  // Si ya está entregado, no descontar de nuevo
   if (pedido.estado === 'entregado') {
+    console.log(`[Inventario] Pedido ${pedidoId} ya estaba entregado.`);
     return true;
   }
 
   const items = Array.isArray(pedido.items) ? pedido.items : [];
+  console.log(`[Inventario] Items del pedido:`, items);
   let errores = [];
 
   for (const item of items) {
-    // Si es combo, tiene subitems en item.items
+    // Si es combo, expandir subitems
     const subitems = item.esCombo && Array.isArray(item.items) ? item.items : [item];
 
     for (const sub of subitems) {
-      // Intentar obtener producto_id
       let productoId = sub.producto_id;
-      let nombreProducto = sub.nombre;
+      let nombreProducto = sub.nombre || 'Producto sin nombre';
 
+      // Si no tiene producto_id, buscar por nombre (fallback)
       if (!productoId) {
-        // Buscar por nombre (compatibilidad con pedidos antiguos)
+        console.log(`[Inventario] Buscando producto por nombre: ${nombreProducto}`);
         const { data: productos } = await window.guajiroPC
           .from('productos')
           .select('id, stock')
@@ -365,14 +387,17 @@ async function descontarStockDePedido(pedidoId) {
           .eq('id', productoId)
           .single();
         if (!producto) {
-          errores.push(`Producto "${nombreProducto}" no encontrado.`);
+          errores.push(`Producto con ID ${productoId} no encontrado.`);
           continue;
         }
         sub.stock_anterior = producto.stock;
       }
 
       const cantidad = sub.cantidad || 0;
-      if (cantidad <= 0) continue;
+      if (cantidad <= 0) {
+        console.log(`[Inventario] Cantidad 0 para ${nombreProducto}, se omite.`);
+        continue;
+      }
 
       const stockAnterior = sub.stock_anterior;
       const stockNuevo = stockAnterior - cantidad;
@@ -382,7 +407,7 @@ async function descontarStockDePedido(pedidoId) {
         continue;
       }
 
-      // Actualizar stock
+      console.log(`[Inventario] Actualizando ${nombreProducto}: ${stockAnterior} → ${stockNuevo}`);
       const { error: errUpdate } = await window.guajiroPC
         .from('productos')
         .update({ stock: stockNuevo })
@@ -409,16 +434,23 @@ async function descontarStockDePedido(pedidoId) {
 
       if (errMov) {
         errores.push(`Error al registrar movimiento de "${nombreProducto}": ${errMov.message}`);
+        console.error(`[Inventario] Error de movimiento:`, errMov);
       } else {
-        // ─── NOTIFICACIÓN DE STOCK BAJO (dinámico) ───
-        await window.notificarStockBajo(productoId, nombreProducto, stockNuevo);
+        console.log(`[Inventario] Movimiento registrado para ${nombreProducto}`);
+        try {
+          await window.notificarStockBajo(productoId, nombreProducto, stockNuevo);
+        } catch (e) {
+          console.warn('Error en notificación de stock:', e);
+        }
       }
     }
   }
 
   if (errores.length > 0) {
     alert('Se produjeron errores al descontar inventario:\n' + errores.join('\n'));
+    console.error('[Inventario] Errores:', errores);
     return false;
   }
+  console.log(`[Inventario] Descuento completado para pedido ${pedidoId}`);
   return true;
-        }
+                                   }

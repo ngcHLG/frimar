@@ -310,7 +310,7 @@ function renderProductos() {
   const container = document.getElementById('productos-container');
   let productosFiltrados = todosProductos
     .filter(p => obtenerPrecioNumerico(p) !== null)
-    .filter(p => (p.stock || 0) > 0); // ← OCULTA PRODUCTOS CON STOCK 0
+    .filter(p => (p.stock || 0) > 0);
 
   if (categoriaActiva !== 'todas') {
     productosFiltrados = productosFiltrados.filter(p => p.categoria_id === categoriaActiva);
@@ -319,9 +319,10 @@ function renderProductos() {
     container.innerHTML = '<p class="text-muted">No existen registros en esta clasificación.</p>';
     return;
   }
+
   container.innerHTML = productosFiltrados.map(p => {
     const stock = p.stock !== undefined ? p.stock : 0;
-    const stockText = stock > 0 ? `Stock: ${stock}` : 'Sin stock';
+    // El color del stock solo para el texto "/ X"
     const stockColor = stock > 5 ? 'text-success' : (stock > 0 ? 'text-warning' : 'text-danger');
     return `
     <div class="col">
@@ -336,9 +337,11 @@ function renderProductos() {
           <h6 class="card-title mb-1">${p.nombre}</h6>
           <p class="card-text small text-muted flex-grow-1">${p.descripcion || ''}</p>
           <div class="precio-text mb-2">${obtenerPrecioProducto(p)}</div>
-          <div class="small ${stockColor} mb-2">${stockText}</div>
           <div class="d-flex gap-2 align-items-center">
-            <input type="number" id="qty-${p.id}" class="form-control qty-input" style="width: 70px;" min="${obtenerCantidadMinima(p)}" value="${obtenerCantidadMinima(p)}" ${!horarioAbierto ? 'disabled' : ''}>
+            <div class="d-flex align-items-center gap-1">
+              <input type="number" id="qty-${p.id}" class="form-control qty-input" style="width: 70px;" min="${obtenerCantidadMinima(p)}" value="${obtenerCantidadMinima(p)}" ${!horarioAbierto ? 'disabled' : ''}>
+              <span class="small ${stockColor}">/ ${stock}</span>
+            </div>
             <button class="btn btn-accent flex-grow-1" onclick="agregarAlCarrito('${p.id}')" ${!horarioAbierto ? 'disabled' : ''}>
               Añadir
             </button>
@@ -458,7 +461,6 @@ async function cargarCombosPublicos() {
     const precioData = await obtenerPrecioCombo(combo.id);
     if (!precioData) continue;
 
-    // Verificar stock de todos los productos del combo
     let stockSuficiente = true;
     for (const item of precioData.items) {
       const producto = todosProductos.find(p => p.id === item.productos.id);
@@ -467,7 +469,7 @@ async function cargarCombosPublicos() {
         break;
       }
     }
-    if (!stockSuficiente) continue; // ← OCULTA COMBO SI ALGÚN PRODUCTO NO TIENE STOCK SUFICIENTE
+    if (!stockSuficiente) continue;
 
     const { items, originalTotal, finalPrice } = precioData;
     const listaProductos = items.map(i => `${i.cantidad}x ${i.productos.nombre}`).join(', ');
@@ -538,4 +540,4 @@ async function verificarHorario() {
 
   document.getElementById('horario-aviso').classList.toggle('d-none', horarioAbierto);
   document.getElementById('horario-texto').textContent = textoHorario;
-            }
+    }

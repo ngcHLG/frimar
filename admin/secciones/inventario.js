@@ -8,7 +8,7 @@ window.inventario = {
 
       <!-- Filtro de búsqueda para productos -->
       <div class="mb-3">
-        <input type="text" class="form-control form-control-sm" id="inv-filtro-productos" placeholder="🔍 Buscar producto..." style="max-width: 300px;">
+        <input type="text" class="form-control form-control-sm" id="inv-filtro-productos" placeholder="Buscar producto..." style="max-width: 300px;">
       </div>
 
       <div class="table-responsive">
@@ -17,7 +17,7 @@ window.inventario = {
             <tr>
               <th>Producto</th>
               <th>Stock</th>
-              <th style="width: 100px;">Acciones</th>
+              <th style="width: 80px;">Acciones</th>
             </tr>
           </thead>
           <tbody id="inv-tbody-productos"></tbody>
@@ -34,8 +34,8 @@ window.inventario = {
           <option value="ajuste">Ajuste</option>
           <option value="venta">Venta</option>
         </select>
-        <button class="btn btn-outline-accent btn-sm" onclick="window.inventario.recargar()">
-          <i class="bi bi-arrow-clockwise"></i> Actualizar
+        <button class="btn btn-outline-accent btn-sm" onclick="window.inventario.recargar()" title="Actualizar">
+          <i class="bi bi-arrow-clockwise"></i>
         </button>
       </div>
       <div id="inv-historial" style="max-height:400px; overflow-y:auto;"></div>
@@ -76,10 +76,8 @@ window.inventario = {
       return;
     }
 
-    // Generar filas con botón de editar y panel inline
     tbody.innerHTML = data.map(p => {
       const stockColor = p.stock <= 0 ? 'bg-danger' : (p.stock < 5 ? 'bg-warning' : 'bg-secondary');
-      // ID único para el panel de edición
       const panelId = `edit-panel-${p.id}`;
       return `
         <tr id="row-${p.id}">
@@ -92,33 +90,33 @@ window.inventario = {
           </td>
         </tr>
         <tr id="${panelId}" class="edit-panel" style="display:none; background-color: var(--bg-surface);">
-          <td colspan="3" style="padding: 0.5rem 1rem;">
-            <div class="d-flex flex-wrap align-items-center gap-2">
-              <!-- Toggle añadir/quitar -->
+          <td colspan="3" style="padding: 0.3rem 0.5rem;">
+            <div class="d-flex flex-wrap align-items-center gap-1" style="white-space: nowrap;">
+              <!-- Toggle añadir/quitar (solo íconos) -->
               <div class="btn-group btn-group-sm" role="group">
-                <button class="btn btn-outline-accent btn-sm tipo-btn active" data-tipo="añadir" data-id="${p.id}" onclick="window.inventario.setTipo('${p.id}', 'añadir')">
-                  <i class="bi bi-plus-circle"></i> Añadir
+                <button class="btn btn-outline-accent tipo-btn active" data-tipo="añadir" data-id="${p.id}" onclick="window.inventario.setTipo('${p.id}', 'añadir')" title="Añadir">
+                  <i class="bi bi-plus-circle"></i>
                 </button>
-                <button class="btn btn-outline-accent btn-sm tipo-btn" data-tipo="quitar" data-id="${p.id}" onclick="window.inventario.setTipo('${p.id}', 'quitar')">
-                  <i class="bi bi-dash-circle"></i> Quitar
+                <button class="btn btn-outline-accent tipo-btn" data-tipo="quitar" data-id="${p.id}" onclick="window.inventario.setTipo('${p.id}', 'quitar')" title="Quitar">
+                  <i class="bi bi-dash-circle"></i>
                 </button>
               </div>
 
               <!-- Cantidad -->
-              <div style="display:flex; align-items:center; gap:0.3rem;">
+              <div style="display:flex; align-items:center; gap:0.2rem;">
                 <label class="small text-muted" style="margin:0;">Cant:</label>
-                <input type="number" class="form-control form-control-sm" id="inv-cant-${p.id}" value="1" min="1" style="width:70px;">
+                <input type="number" class="form-control form-control-sm" id="inv-cant-${p.id}" value="1" min="1" style="width:60px;">
               </div>
 
-              <!-- Motivo -->
-              <input type="text" class="form-control form-control-sm" id="inv-motivo-${p.id}" placeholder="Motivo (opcional)" style="flex:1; min-width:120px;">
+              <!-- Motivo (más corto) -->
+              <input type="text" class="form-control form-control-sm" id="inv-motivo-${p.id}" placeholder="Motivo" style="width:120px; min-width:80px; flex:1;">
 
-              <!-- Botones -->
-              <button class="btn btn-accent btn-sm" onclick="window.inventario.guardarAjusteInline('${p.id}')">
-                <i class="bi bi-check"></i> Aceptar
+              <!-- Botones Aceptar y Cancelar (solo íconos) -->
+              <button class="btn btn-accent btn-sm" onclick="window.inventario.guardarAjusteInline('${p.id}')" title="Aceptar">
+                <i class="bi bi-check"></i>
               </button>
-              <button class="btn btn-outline-accent btn-sm" onclick="window.inventario.toggleEdicion('${p.id}')">
-                <i class="bi bi-x"></i> Cancelar
+              <button class="btn btn-outline-accent btn-sm" onclick="window.inventario.toggleEdicion('${p.id}')" title="Cancelar">
+                <i class="bi bi-x"></i>
               </button>
             </div>
           </td>
@@ -131,10 +129,8 @@ window.inventario = {
     const panel = document.getElementById(`edit-panel-${productoId}`);
     if (panel) {
       if (panel.style.display === 'none') {
-        // Ocultar cualquier otro panel abierto
         document.querySelectorAll('.edit-panel').forEach(p => p.style.display = 'none');
         panel.style.display = 'table-row';
-        // Resetear toggle a añadir
         this.setTipo(productoId, 'añadir');
       } else {
         panel.style.display = 'none';
@@ -149,7 +145,6 @@ window.inventario = {
     btns.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tipo === tipo);
     });
-    // Guardar el tipo en un dataset del panel
     panel.dataset.tipo = tipo;
   },
 
@@ -201,6 +196,10 @@ window.inventario = {
       return;
     }
 
+    // Obtener usuario autenticado
+    const { data: { user } } = await window.guajiroPC.auth.getUser();
+    const usuario = user?.email || 'admin';
+
     // Registrar movimiento
     const { error: errMov } = await window.guajiroPC
       .from('inventario_movimientos')
@@ -210,22 +209,22 @@ window.inventario = {
         tipo: 'ajuste',
         motivo: motivo,
         pedido_id: null,
-        usuario: (await window.guajiroPC.auth.getUser()).data.user?.email || 'admin',
+        usuario: usuario,
         stock_anterior: stockAnterior,
         stock_nuevo: stockNuevo
       }]);
 
     if (errMov) {
-      alert('Stock actualizado pero no se registró el movimiento: ' + errMov.message);
+      // Mostrar error detallado
+      alert('Stock actualizado pero error al registrar movimiento: ' + errMov.message + '\n\nAsegúrate de tener políticas RLS que permitan insertar en inventario_movimientos.');
+      // No recargamos para que no se pierda el ajuste, pero mostramos el error.
+    } else {
+      // Notificación de stock bajo
+      await window.notificarStockBajo(productoId, nombreProducto, stockNuevo);
     }
 
-    // Notificación de stock bajo (si corresponde)
-    await window.notificarStockBajo(productoId, nombreProducto, stockNuevo);
-
-    // Cerrar panel
+    // Cerrar panel y recargar
     panel.style.display = 'none';
-
-    // Recargar lista
     this.cargarProductos();
     this.cargarHistorial();
   },
@@ -273,6 +272,7 @@ window.inventario = {
       const signo = m.cantidad >= 0 ? '+' : '';
       const clase = m.cantidad >= 0 ? 'text-success' : 'text-danger';
       const tipoLabel = m.tipo === 'venta' ? '🛒 Venta' : '✏️ Ajuste';
+      // Los emojis los mantengo solo en el historial, puedes cambiarlos por íconos si prefieres.
       return `
         <div class="list-item" style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:6px; padding:0.5rem 0.8rem; margin-bottom:0.4rem; display:flex; justify-content:space-between; align-items:center;">
           <div>

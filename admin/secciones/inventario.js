@@ -6,7 +6,6 @@ window.inventario = {
         <i class="bi bi-boxes text-secondary"></i> Inventario
       </h2>
 
-      <!-- Filtro de búsqueda para productos -->
       <div class="mb-3">
         <input type="text" class="form-control form-control-sm" id="inv-filtro-productos" placeholder="Buscar producto..." style="max-width: 300px;">
       </div>
@@ -44,10 +43,7 @@ window.inventario = {
     await this.cargarProductos();
     await this.cargarHistorial();
 
-    // Filtro de productos en tiempo real
     document.getElementById('inv-filtro-productos').addEventListener('input', () => this.cargarProductos());
-
-    // Filtros del historial
     document.getElementById('inv-filtro-fecha').addEventListener('change', () => this.cargarHistorial());
     document.getElementById('inv-filtro-producto-hist').addEventListener('input', () => this.cargarHistorial());
     document.getElementById('inv-filtro-tipo').addEventListener('change', () => this.cargarHistorial());
@@ -64,12 +60,9 @@ window.inventario = {
       .eq('activo', true)
       .order('nombre');
 
-    if (filtro) {
-      query = query.ilike('nombre', `%${filtro}%`);
-    }
+    if (filtro) query = query.ilike('nombre', `%${filtro}%`);
 
     const { data, error } = await query;
-
     const tbody = document.getElementById('inv-tbody-productos');
     if (error || !data || data.length === 0) {
       tbody.innerHTML = '<tr><td colspan="3" class="text-muted">No hay productos que coincidan.</td></tr>';
@@ -92,7 +85,6 @@ window.inventario = {
         <tr id="${panelId}" class="edit-panel" style="display:none; background-color: var(--bg-surface);">
           <td colspan="3" style="padding: 0.3rem 0.5rem;">
             <div class="d-flex flex-wrap align-items-center gap-1" style="white-space: nowrap;">
-              <!-- Toggle añadir/quitar (solo íconos) -->
               <div class="btn-group btn-group-sm" role="group">
                 <button class="btn btn-outline-accent tipo-btn active" data-tipo="añadir" data-id="${p.id}" onclick="window.inventario.setTipo('${p.id}', 'añadir')" title="Añadir">
                   <i class="bi bi-plus-circle"></i>
@@ -101,17 +93,11 @@ window.inventario = {
                   <i class="bi bi-dash-circle"></i>
                 </button>
               </div>
-
-              <!-- Cantidad -->
               <div style="display:flex; align-items:center; gap:0.2rem;">
                 <label class="small text-muted" style="margin:0;">Cant:</label>
                 <input type="number" class="form-control form-control-sm" id="inv-cant-${p.id}" value="1" min="1" style="width:60px;">
               </div>
-
-              <!-- Motivo (más corto) -->
               <input type="text" class="form-control form-control-sm" id="inv-motivo-${p.id}" placeholder="Motivo" style="width:120px; min-width:80px; flex:1;">
-
-              <!-- Botones Aceptar y Cancelar (solo íconos) -->
               <button class="btn btn-accent btn-sm" onclick="window.inventario.guardarAjusteInline('${p.id}')" title="Aceptar">
                 <i class="bi bi-check"></i>
               </button>
@@ -165,7 +151,6 @@ window.inventario = {
     const motivo = motivoInput.value.trim() || 'Ajuste manual';
     const cantidadReal = tipo === 'añadir' ? cantidad : -cantidad;
 
-    // Obtener producto y su nombre
     const { data: producto, error: errGet } = await window.guajiroPC
       .from('productos')
       .select('nombre, stock')
@@ -185,7 +170,6 @@ window.inventario = {
       return;
     }
 
-    // Actualizar stock
     const { error: errUpdate } = await window.guajiroPC
       .from('productos')
       .update({ stock: stockNuevo })
@@ -196,11 +180,9 @@ window.inventario = {
       return;
     }
 
-    // Obtener usuario autenticado
     const { data: { user } } = await window.guajiroPC.auth.getUser();
     const usuario = user?.email || 'admin';
 
-    // Registrar movimiento
     const { error: errMov } = await window.guajiroPC
       .from('inventario_movimientos')
       .insert([{
@@ -215,15 +197,15 @@ window.inventario = {
       }]);
 
     if (errMov) {
-      // Mostrar error detallado
       alert('Stock actualizado pero error al registrar movimiento: ' + errMov.message + '\n\nAsegúrate de tener políticas RLS que permitan insertar en inventario_movimientos.');
-      // No recargamos para que no se pierda el ajuste, pero mostramos el error.
     } else {
-      // Notificación de stock bajo
-      await window.notificarStockBajo(productoId, nombreProducto, stockNuevo);
+      try {
+        await window.notificarStockBajo(productoId, nombreProducto, stockNuevo);
+      } catch (e) {
+        console.warn('Error en notificación de stock:', e);
+      }
     }
 
-    // Cerrar panel y recargar
     panel.style.display = 'none';
     this.cargarProductos();
     this.cargarHistorial();
@@ -246,8 +228,7 @@ window.inventario = {
         .select('id')
         .ilike('nombre', `%${productoFiltro}%`);
       if (productos && productos.length > 0) {
-        const ids = productos.map(p => p.id);
-        query = query.in('producto_id', ids);
+        query = query.in('producto_id', productos.map(p => p.id));
       } else {
         document.getElementById('inv-historial').innerHTML = '<p class="text-muted">Sin resultados.</p>';
         return;
@@ -261,7 +242,6 @@ window.inventario = {
     }
 
     const { data, error } = await query;
-
     const container = document.getElementById('inv-historial');
     if (error || !data || data.length === 0) {
       container.innerHTML = '<p class="text-muted">No hay movimientos para estos filtros.</p>';
@@ -271,13 +251,14 @@ window.inventario = {
     container.innerHTML = data.map(m => {
       const signo = m.cantidad >= 0 ? '+' : '';
       const clase = m.cantidad >= 0 ? 'text-success' : 'text-danger';
-      const tipoLabel = m.tipo === 'venta' ? '🛒 Venta' : '✏️ Ajuste';
-      // Los emojis los mantengo solo en el historial, puedes cambiarlos por íconos si prefieres.
+      // Reemplazamos emojis por iconos de Bootstrap
+      const tipoIcon = m.tipo === 'venta' ? '<i class="bi bi-cart"></i>' : '<i class="bi bi-pencil"></i>';
+      const tipoLabel = m.tipo === 'venta' ? 'Venta' : 'Ajuste';
       return `
         <div class="list-item" style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:6px; padding:0.5rem 0.8rem; margin-bottom:0.4rem; display:flex; justify-content:space-between; align-items:center;">
           <div>
             <strong>${m.productos?.nombre || 'Producto eliminado'}</strong>
-            <span class="badge bg-secondary">${tipoLabel}</span>
+            <span class="badge bg-secondary">${tipoIcon} ${tipoLabel}</span>
             <span class="${clase}">${signo}${m.cantidad}</span>
             <span class="text-muted small">(prev: ${m.stock_anterior} → ${m.stock_nuevo})</span>
             ${m.motivo ? `<span class="text-muted small">· ${m.motivo}</span>` : ''}

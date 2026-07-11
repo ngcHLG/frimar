@@ -1,0 +1,279 @@
+/* admin/css/admin.css - Estilos específicos del panel de administración */
+
+:root {
+  --c-01: #0D111B;
+  --c-02: #16202D;
+  --c-03: #39546A;
+  --c-04: #8A8D91;
+  --c-05: #A7D6E8;
+  --c-06: #F2F2F2;
+  --c-white: #FFFFFF;
+}
+
+[data-theme="light"] {
+  --bg-body: var(--c-06);
+  --bg-surface: var(--c-white);
+  --text-main: var(--c-01);
+  --text-secondary: var(--c-03);
+  --border-color: rgba(138, 141, 145, 0.3);
+  --accent-btn: var(--c-03);
+  --accent-text: var(--c-06);
+  --accent-hover: var(--c-02);
+  --nav-bg: var(--c-02);
+  --nav-text: var(--c-05);
+  --modal-bg: var(--c-white);
+  --modal-backdrop: rgba(0,0,0,0.5);
+}
+
+[data-theme="dark"] {
+  --bg-body: var(--c-01);
+  --bg-surface: var(--c-02);
+  --text-main: var(--c-06);
+  --text-secondary: var(--c-05);
+  --border-color: var(--c-03);
+  --accent-btn: var(--c-05);
+  --accent-text: var(--c-01);
+  --accent-hover: var(--c-06);
+  --nav-bg: var(--c-01);
+  --nav-text: var(--c-06);
+  --modal-bg: var(--c-02);
+  --modal-backdrop: rgba(0,0,0,0.7);
+}
+
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+body {
+  background-color: var(--bg-body);
+  font-family: 'Inter', sans-serif;
+  color: var(--text-main);
+}
+
+h2, h3, h4, .navbar-brand {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+}
+
+/* Navbar */
+.navbar-admin {
+  background-color: var(--nav-bg) !important;
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+}
+
+.navbar-brand {
+  color: var(--nav-text) !important;
+  font-size: 1.3rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.btn-nav-logout {
+  color: var(--nav-text);
+  border: 1px solid var(--nav-text);
+  background: transparent;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0.3rem 0.5rem;
+}
+.btn-nav-logout:hover {
+  background-color: var(--nav-text);
+  color: var(--nav-bg);
+}
+
+/* Botones */
+.btn-accent {
+  background-color: var(--accent-btn);
+  color: var(--accent-text);
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.85rem;
+}
+.btn-accent:hover {
+  background-color: var(--accent-hover);
+  color: var(--accent-text);
+}
+
+.btn-outline-accent {
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  background: transparent;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.85rem;
+  border-radius: 4px;
+}
+.btn-outline-accent:hover {
+  background-color: var(--accent-btn);
+  color: var(--accent-text);
+  border-color: var(--accent-btn);
+}
+
+/* Tabs */
+.admin-tabs {
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.5rem 0;
+  position: sticky;
+  top: 56px;
+  z-index: 1020;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.admin-tabs .container {
+  display: flex;
+  gap: 1rem;
+}
+
+.tab-btn {
+  background: transparent;
+  color: var(--text-muted, var(--c-04));
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 0.5rem 0.4rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.tab-btn:hover {
+  color: var(--text-main);
+  border-bottom-color: var(--border-color);
+}
+.tab-btn.active {
+  color: var(--accent-btn);
+  border-bottom-color: var(--accent-btn);
+}
+
+/* FABs */
+.fab-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1040;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.fab-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: var(--accent-btn);
+  color: var(--accent-text);
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+.fab-btn:hover {
+  background-color: var(--accent-hover);
+}
+#fab-add {
+  display: none;
+}
+
+/* Modales */
+.modal-content {
+  background-color: var(--modal-bg);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+}
+.modal-header {
+  border-bottom: 1px solid var(--border-color);
+}
+.modal-footer {
+  border-top: 1px solid var(--border-color);
+}
+.modal-title {
+  color: var(--text-main);
+}
+[data-theme="dark"] .modal-header .btn-close {
+  filter: invert(1);
+}
+.modal-backdrop {
+  background-color: var(--modal-backdrop);
+}
+
+/* Listas (comunes a todas las secciones) */
+.list-item {
+  background-color: var(--bg-surface) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 8px !important;
+  padding: 0.8rem 1rem !important;
+  margin-bottom: 0.8rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.8rem;
+  overflow: hidden;
+}
+.list-item .item-info {
+  display: flex !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.list-item .item-name {
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.list-item .item-meta,
+.list-item .item-info span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.list-item .d-flex.gap-1,
+.list-item .d-flex.gap-2 {
+  flex-shrink: 0;
+}
+
+@media (max-width: 400px) {
+  .list-item {
+    padding: 0.6rem 0.8rem !important;
+  }
+  .list-item .item-name {
+    font-size: 0.85rem;
+  }
+  .list-item .item-meta,
+  .list-item .item-info span {
+    font-size: 0.8rem;
+  }
+  .btn-outline-accent {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* Panel de edición inline (para inventario) */
+.edit-panel td {
+  padding: 0.5rem 1rem !important;
+  background-color: var(--bg-surface);
+}
+.edit-panel .btn-group .btn.active {
+  background-color: var(--accent-btn);
+  color: var(--accent-text);
+  border-color: var(--accent-btn);
+}
+.edit-panel .btn-group .btn {
+  border-color: var(--border-color);
+}
+.edit-panel input,
+.edit-panel .btn {
+  border-radius: 4px;
+  }

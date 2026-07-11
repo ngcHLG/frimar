@@ -6,13 +6,9 @@ window.inventario = {
         <i class="bi bi-boxes text-secondary"></i> Inventario
       </h2>
 
-      <div class="d-flex flex-wrap gap-2 mb-3">
-        <button class="btn btn-accent btn-sm" onclick="window.inventario.abrirAjuste()">
-          <i class="bi bi-plus-circle"></i> Ajustar stock
-        </button>
-        <button class="btn btn-outline-accent btn-sm" onclick="window.inventario.recargar()">
-          <i class="bi bi-arrow-clockwise"></i> Actualizar
-        </button>
+      <!-- Filtro de búsqueda para productos -->
+      <div class="mb-3">
+        <input type="text" class="form-control form-control-sm" id="inv-filtro-productos" placeholder="🔍 Buscar producto..." style="max-width: 300px;">
       </div>
 
       <div class="table-responsive">
@@ -21,7 +17,7 @@ window.inventario = {
             <tr>
               <th>Producto</th>
               <th>Stock</th>
-              <th>Acciones</th>
+              <th style="width: 100px;">Acciones</th>
             </tr>
           </thead>
           <tbody id="inv-tbody-productos"></tbody>
@@ -32,83 +28,210 @@ window.inventario = {
       <h5 class="mt-4">Historial de movimientos</h5>
       <div class="d-flex flex-wrap gap-2 mb-2">
         <input type="date" class="form-control form-control-sm" id="inv-filtro-fecha" style="width:150px;">
-        <input type="text" class="form-control form-control-sm" id="inv-filtro-producto" placeholder="Buscar producto" style="width:200px;">
+        <input type="text" class="form-control form-control-sm" id="inv-filtro-producto-hist" placeholder="Buscar producto" style="width:200px;">
         <select class="form-select form-select-sm" id="inv-filtro-tipo" style="width:150px;">
           <option value="">Todos</option>
           <option value="ajuste">Ajuste</option>
           <option value="venta">Venta</option>
         </select>
+        <button class="btn btn-outline-accent btn-sm" onclick="window.inventario.recargar()">
+          <i class="bi bi-arrow-clockwise"></i> Actualizar
+        </button>
       </div>
       <div id="inv-historial" style="max-height:400px; overflow-y:auto;"></div>
-
-      ${modalAjusteHTML()}
     `;
 
     await this.cargarProductos();
     await this.cargarHistorial();
 
+    // Filtro de productos en tiempo real
+    document.getElementById('inv-filtro-productos').addEventListener('input', () => this.cargarProductos());
+
+    // Filtros del historial
     document.getElementById('inv-filtro-fecha').addEventListener('change', () => this.cargarHistorial());
-    document.getElementById('inv-filtro-producto').addEventListener('input', () => this.cargarHistorial());
+    document.getElementById('inv-filtro-producto-hist').addEventListener('input', () => this.cargarHistorial());
     document.getElementById('inv-filtro-tipo').addEventListener('change', () => this.cargarHistorial());
-
-    document.getElementById('btn-inv-ajuste-guardar').addEventListener('click', () => this.guardarAjuste());
-
-    // Cargar productos en el select del modal
-    await this.cargarSelectProductos();
   },
 
   destroy: function() {},
 
   cargarProductos: async function() {
-    const { data, error } = await window.guajiroPC
+    const filtro = document.getElementById('inv-filtro-productos').value.trim().toLowerCase();
+
+    let query = window.guajiroPC
       .from('productos')
       .select('id, nombre, stock')
       .eq('activo', true)
       .order('nombre');
 
+    if (filtro) {
+      query = query.ilike('nombre', `%${filtro}%`);
+    }
+
+    const { data, error } = await query;
+
     const tbody = document.getElementById('inv-tbody-productos');
     if (error || !data || data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="3" class="text-muted">No hay productos activos.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="3" class="text-muted">No hay productos que coincidan.</td></tr>';
       return;
     }
 
+    // Generar filas con botón de editar y panel inline
     tbody.innerHTML = data.map(p => {
       const stockColor = p.stock <= 0 ? 'bg-danger' : (p.stock < 5 ? 'bg-warning' : 'bg-secondary');
+      // ID único para el panel de edición
+      const panelId = `edit-panel-${p.id}`;
       return `
-        <tr>
+        <tr id="row-${p.id}">
           <td><strong>${p.nombre}</strong></td>
           <td><span class="badge ${stockColor}">${p.stock}</span></td>
           <td>
-            <button class="btn btn-outline-accent btn-sm" onclick="window.inventario.abrirAjuste('${p.id}')">
+            <button class="btn btn-outline-accent btn-sm" onclick="window.inventario.toggleEdicion('${p.id}')" title="Editar stock">
               <i class="bi bi-pencil"></i>
             </button>
+          </td>
+        </tr>
+        <tr id="${panelId}" class="edit-panel" style="display:none; background-color: var(--bg-surface);">
+          <td colspan="3" style="padding: 0.5rem 1rem;">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <!-- Toggle añadir/quitar -->
+              <div class="btn-group btn-group-sm" role="group">
+                <button class="btn btn-outline-accent btn-sm tipo-btn active" data-tipo="añadir" data-id="${p.id}" onclick="window.inventario.setTipo('${p.id}', 'añadir')">
+                  <i class="bi bi-plus-circle"></i> Añadir
+                </button>
+                <button class="btn btn-outline-accent btn-sm tipo-btn" data-tipo="quitar" data-id="${p.id}" onclick="window.inventario.setTipo('${p.id}', 'quitar')">
+                  <i class="bi bi-dash-circle"></i> Quitar
+                </button>
+              </div>
+
+              <!-- Cantidad -->
+              <div style="display:flex; align-items:center; gap:0.3rem;">
+                <label class="small text-muted" style="margin:0;">Cant:</label>
+                <input type="number" class="form-control form-control-sm" id="inv-cant-${p.id}" value="1" min="1" style="width:70px;">
+              </div>
+
+              <!-- Motivo -->
+              <input type="text" class="form-control form-control-sm" id="inv-motivo-${p.id}" placeholder="Motivo (opcional)" style="flex:1; min-width:120px;">
+
+              <!-- Botones -->
+              <button class="btn btn-accent btn-sm" onclick="window.inventario.guardarAjusteInline('${p.id}')">
+                <i class="bi bi-check"></i> Aceptar
+              </button>
+              <button class="btn btn-outline-accent btn-sm" onclick="window.inventario.toggleEdicion('${p.id}')">
+                <i class="bi bi-x"></i> Cancelar
+              </button>
+            </div>
           </td>
         </tr>
       `;
     }).join('');
   },
 
-  cargarSelectProductos: async function() {
-    const { data } = await window.guajiroPC
-      .from('productos')
-      .select('id, nombre')
-      .eq('activo', true)
-      .order('nombre');
-    const select = document.getElementById('inv-ajuste-producto');
-    if (!select) return;
-    select.innerHTML = '<option value="">Seleccionar...</option>';
-    if (data) {
-      data.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.id;
-        opt.textContent = p.nombre;
-        select.appendChild(opt);
-      });
+  toggleEdicion: function(productoId) {
+    const panel = document.getElementById(`edit-panel-${productoId}`);
+    if (panel) {
+      if (panel.style.display === 'none') {
+        // Ocultar cualquier otro panel abierto
+        document.querySelectorAll('.edit-panel').forEach(p => p.style.display = 'none');
+        panel.style.display = 'table-row';
+        // Resetear toggle a añadir
+        this.setTipo(productoId, 'añadir');
+      } else {
+        panel.style.display = 'none';
+      }
     }
   },
 
+  setTipo: function(productoId, tipo) {
+    const panel = document.getElementById(`edit-panel-${productoId}`);
+    if (!panel) return;
+    const btns = panel.querySelectorAll('.tipo-btn');
+    btns.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tipo === tipo);
+    });
+    // Guardar el tipo en un dataset del panel
+    panel.dataset.tipo = tipo;
+  },
+
+  guardarAjusteInline: async function(productoId) {
+    const panel = document.getElementById(`edit-panel-${productoId}`);
+    if (!panel) return;
+
+    const tipo = panel.dataset.tipo || 'añadir';
+    const cantidadInput = document.getElementById(`inv-cant-${productoId}`);
+    const motivoInput = document.getElementById(`inv-motivo-${productoId}`);
+
+    const cantidad = parseInt(cantidadInput.value);
+    if (isNaN(cantidad) || cantidad <= 0) {
+      alert('La cantidad debe ser un número positivo.');
+      return;
+    }
+
+    const motivo = motivoInput.value.trim() || 'Ajuste manual';
+    const cantidadReal = tipo === 'añadir' ? cantidad : -cantidad;
+
+    // Obtener producto y su nombre
+    const { data: producto, error: errGet } = await window.guajiroPC
+      .from('productos')
+      .select('nombre, stock')
+      .eq('id', productoId)
+      .single();
+
+    if (errGet || !producto) {
+      alert('Error al obtener el producto.');
+      return;
+    }
+
+    const nombreProducto = producto.nombre;
+    const stockAnterior = producto.stock;
+    const stockNuevo = stockAnterior + cantidadReal;
+    if (stockNuevo < 0) {
+      alert('No puedes quitar más stock del que existe.');
+      return;
+    }
+
+    // Actualizar stock
+    const { error: errUpdate } = await window.guajiroPC
+      .from('productos')
+      .update({ stock: stockNuevo })
+      .eq('id', productoId);
+
+    if (errUpdate) {
+      alert('Error al actualizar stock: ' + errUpdate.message);
+      return;
+    }
+
+    // Registrar movimiento
+    const { error: errMov } = await window.guajiroPC
+      .from('inventario_movimientos')
+      .insert([{
+        producto_id: productoId,
+        cantidad: cantidadReal,
+        tipo: 'ajuste',
+        motivo: motivo,
+        pedido_id: null,
+        usuario: (await window.guajiroPC.auth.getUser()).data.user?.email || 'admin',
+        stock_anterior: stockAnterior,
+        stock_nuevo: stockNuevo
+      }]);
+
+    if (errMov) {
+      alert('Stock actualizado pero no se registró el movimiento: ' + errMov.message);
+    }
+
+    // Notificación de stock bajo (si corresponde)
+    await window.notificarStockBajo(productoId, nombreProducto, stockNuevo);
+
+    // Cerrar panel
+    panel.style.display = 'none';
+
+    // Recargar lista
+    this.cargarProductos();
+    this.cargarHistorial();
+  },
+
   cargarHistorial: async function() {
-    const productoFiltro = document.getElementById('inv-filtro-producto').value.trim();
+    const productoFiltro = document.getElementById('inv-filtro-producto-hist').value.trim();
     const fecha = document.getElementById('inv-filtro-fecha').value;
     const tipo = document.getElementById('inv-filtro-tipo').value;
 
@@ -165,131 +288,8 @@ window.inventario = {
     }).join('');
   },
 
-  abrirAjuste: function(productoId = null) {
-    if (productoId) {
-      document.getElementById('inv-ajuste-producto').value = productoId;
-    } else {
-      document.getElementById('inv-ajuste-producto').value = '';
-    }
-    document.getElementById('inv-ajuste-cantidad').value = '';
-    document.getElementById('inv-ajuste-motivo').value = '';
-    document.getElementById('inv-ajuste-tipo').value = 'añadir';
-    document.getElementById('inv-ajuste-modal-titulo').textContent = 'Ajustar stock';
-    new bootstrap.Modal(document.getElementById('invAjusteModal')).show();
-  },
-
-  guardarAjuste: async function() {
-    const productoId = document.getElementById('inv-ajuste-producto').value;
-    const cantidad = parseInt(document.getElementById('inv-ajuste-cantidad').value);
-    const motivo = document.getElementById('inv-ajuste-motivo').value.trim() || 'Ajuste manual';
-    const tipo = document.getElementById('inv-ajuste-tipo').value;
-
-    if (!productoId || isNaN(cantidad) || cantidad <= 0) {
-      alert('Selecciona un producto y una cantidad válida.');
-      return;
-    }
-
-    const cantidadReal = tipo === 'añadir' ? cantidad : -cantidad;
-
-    // Obtener producto y su nombre para la notificación
-    const { data: producto, error: errGet } = await window.guajiroPC
-      .from('productos')
-      .select('nombre, stock')
-      .eq('id', productoId)
-      .single();
-
-    if (errGet || !producto) {
-      alert('Error al obtener el producto.');
-      return;
-    }
-
-    const nombreProducto = producto.nombre;
-    const stockAnterior = producto.stock;
-    const stockNuevo = stockAnterior + cantidadReal;
-    if (stockNuevo < 0) {
-      alert('No puedes quitar más stock del que existe.');
-      return;
-    }
-
-    const { error: errUpdate } = await window.guajiroPC
-      .from('productos')
-      .update({ stock: stockNuevo })
-      .eq('id', productoId);
-
-    if (errUpdate) {
-      alert('Error al actualizar stock: ' + errUpdate.message);
-      return;
-    }
-
-    const { error: errMov } = await window.guajiroPC
-      .from('inventario_movimientos')
-      .insert([{
-        producto_id: productoId,
-        cantidad: cantidadReal,
-        tipo: 'ajuste',
-        motivo: motivo,
-        pedido_id: null,
-        usuario: (await window.guajiroPC.auth.getUser()).data.user?.email || 'admin',
-        stock_anterior: stockAnterior,
-        stock_nuevo: stockNuevo
-      }]);
-
-    if (errMov) {
-      alert('Stock actualizado pero no se registró el movimiento: ' + errMov.message);
-    }
-
-    // ─── NOTIFICACIÓN DE STOCK BAJO (dinámico) ───
-    await window.notificarStockBajo(productoId, nombreProducto, stockNuevo);
-
-    bootstrap.Modal.getInstance(document.getElementById('invAjusteModal')).hide();
-    this.cargarProductos();
-    this.cargarHistorial();
-  },
-
   recargar: function() {
     this.cargarProductos();
     this.cargarHistorial();
   }
 };
-
-function modalAjusteHTML() {
-  return `
-    <div class="modal fade" id="invAjusteModal" tabindex="-1">
-      <div class="modal-dialog modal-sm">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="inv-ajuste-modal-titulo">Ajustar stock</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <div class="mb-2">
-              <label class="form-label">Producto</label>
-              <select class="form-select" id="inv-ajuste-producto">
-                <option value="">Seleccionar...</option>
-              </select>
-            </div>
-            <div class="mb-2">
-              <label class="form-label">Tipo</label>
-              <select class="form-select" id="inv-ajuste-tipo">
-                <option value="añadir">Añadir (+)</option>
-                <option value="quitar">Quitar (-)</option>
-              </select>
-            </div>
-            <div class="mb-2">
-              <label class="form-label">Cantidad</label>
-              <input type="number" class="form-control" id="inv-ajuste-cantidad" min="1" required>
-            </div>
-            <div class="mb-2">
-              <label class="form-label">Motivo (opcional)</label>
-              <input type="text" class="form-control" id="inv-ajuste-motivo" placeholder="Ej: reposición, devolución...">
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-accent btn-sm" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn btn-accent btn-sm" id="btn-inv-ajuste-guardar">Guardar</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-}

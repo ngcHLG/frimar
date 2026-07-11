@@ -298,17 +298,8 @@ window.pedidos.eliminarSeleccionados = function() {
   };
 };
 
-// ─── Función de notificación de stock (local, por si no existe globalmente) ───
-if (typeof window.notificarStockBajo !== 'function') {
-  window.notificarStockBajo = async function(productoId, nombreProducto, stockNuevo) {
-    try {
-      console.log(`[Stock] ${nombreProducto} ahora tiene ${stockNuevo} unidades.`);
-      // Aquí puedes añadir lógica de notificación (ej. ntfy) si deseas
-    } catch (e) {
-      console.warn('Error en notificación de stock:', e);
-    }
-  };
-}
+// ─── NOTA: La función window.notificarStockBajo se define en vendedor/comun.js
+//       No se sobrescribe aquí para que funcione correctamente.
 
 // ─── Cambios de estado con descuento de inventario ───
 window.pedidos.cambiarEstado = async function(id, nuevoEstado) {
@@ -431,6 +422,7 @@ async function descontarStockDePedido(pedidoId) {
       } else {
         console.log(`[Inventario] Movimiento registrado para ${nombreProducto}`);
         try {
+          // ─── USO DE LA FUNCIÓN GLOBAL (definida en comun.js) ───
           await window.notificarStockBajo(productoId, nombreProducto, stockNuevo);
         } catch (e) {
           console.warn('Error en notificación de stock:', e);
@@ -446,4 +438,4 @@ async function descontarStockDePedido(pedidoId) {
   }
   console.log(`[Inventario] Descuento completado para pedido ${pedidoId}`);
   return true;
-  }
+}

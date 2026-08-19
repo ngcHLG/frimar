@@ -18,9 +18,10 @@
   --bg-body: var(--c-06);
   --bg-surface: var(--c-white);
   --text-main: var(--c-01);
-  --text-secondary: var(--c-03);
+  --text-secondary: var(--frimar-marron);
   --border-color: rgba(138, 141, 145, 0.3);
   --accent-btn: var(--frimar-verde);
+  --accent-fg: var(--frimar-verde);
   --accent-text: var(--c-06);
   --accent-hover: var(--frimar-marron);
   --nav-bg: var(--frimar-verde);
@@ -33,9 +34,10 @@
   --bg-body: var(--c-01);
   --bg-surface: var(--c-02);
   --text-main: var(--c-06);
-  --text-secondary: var(--c-05);
-  --border-color: var(--c-03);
+  --text-secondary: var(--frimar-naranja);
+  --border-color: rgba(138, 141, 145, 0.25);
   --accent-btn: var(--frimar-burdeos);
+  --accent-fg: var(--frimar-naranja);
   --accent-text: var(--c-06);
   --accent-hover: var(--frimar-naranja);
   --nav-bg: var(--frimar-burdeos);
@@ -157,8 +159,8 @@ h2, h3, h4 {
   border-bottom-color: var(--border-color);
 }
 .tab-btn.active {
-  color: var(--accent-btn);
-  border-bottom-color: var(--accent-btn);
+  color: var(--accent-fg);
+  border-bottom-color: var(--accent-fg);
 }
 
 /* FABs */

@@ -7,6 +7,16 @@
 })();
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // ── Alto real del navbar (evita solapamientos con elementos sticky) ──
+  function ajustarAlturaNavbar() {
+    const navbar = document.querySelector('.navbar');
+    if (navbar) {
+      document.documentElement.style.setProperty('--navbar-height', navbar.offsetHeight + 'px');
+    }
+  }
+  ajustarAlturaNavbar();
+  window.addEventListener('resize', ajustarAlturaNavbar);
+
   // ── Tema con persistencia ─────────────────
   const btnThemeToggle = document.getElementById('btn-theme-toggle');
   const themeIcon = document.getElementById('theme-icon');

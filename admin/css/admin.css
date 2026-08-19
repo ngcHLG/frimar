@@ -120,7 +120,7 @@ h2, h3, h4, .navbar-brand {
   border-bottom: 1px solid var(--border-color);
   padding: 0.5rem 0;
   position: sticky;
-  top: 56px;
+  top: var(--navbar-height, 60px);
   z-index: 1020;
   overflow-x: auto;
   white-space: nowrap;

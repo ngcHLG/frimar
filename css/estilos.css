@@ -6,6 +6,10 @@
   --c-05: #A7D6E8;
   --c-06: #F2F2F2;
   --c-white: #FFFFFF;
+  --frimar-verde: #77901D;
+  --frimar-burdeos: #2B0A14;
+  --frimar-naranja: #E87003;
+  --frimar-marron: #924B02;
 }
 
 [data-theme="light"] {
@@ -15,11 +19,11 @@
   --text-secondary: var(--c-03);
   --text-muted: var(--c-04);
   --border-color: rgba(138, 141, 145, 0.3);
-  --accent-btn: var(--c-03);
+  --accent-btn: var(--frimar-verde);
   --accent-text: var(--c-06);
-  --accent-hover: var(--c-02);
-  --nav-bg: var(--c-02);
-  --nav-text: var(--c-05);
+  --accent-hover: var(--frimar-marron);
+  --nav-bg: var(--frimar-verde);
+  --nav-text: var(--c-06);
   --splash-bg: rgba(242, 242, 242, 0.92);
 }
 
@@ -30,10 +34,10 @@
   --text-secondary: var(--c-05);
   --text-muted: var(--c-04);
   --border-color: var(--c-03);
-  --accent-btn: var(--c-05);
-  --accent-text: var(--c-01);
-  --accent-hover: var(--c-06);
-  --nav-bg: var(--c-01);
+  --accent-btn: var(--frimar-burdeos);
+  --accent-text: var(--c-06);
+  --accent-hover: var(--frimar-naranja);
+  --nav-bg: var(--frimar-burdeos);
   --nav-text: var(--c-06);
   --splash-bg: rgba(13, 17, 27, 0.92);
 }
@@ -45,12 +49,18 @@
 
 body {
   background-color: var(--bg-body);
-  font-family: 'Inter', sans-serif;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 300;
   color: var(--text-main);
 }
 
-h1, h2, h3, h4, h5, .navbar-brand, .card-title, .offcanvas-title {
-  font-family: 'Montserrat', sans-serif;
+h1, h2, .navbar-brand, .splash-title {
+  font-family: 'Comfortaa', sans-serif;
+  font-weight: 700;
+}
+
+h3, h4, h5, .card-title, .offcanvas-title {
+  font-family: 'Poppins', sans-serif;
   font-weight: 700;
 }
 
@@ -391,9 +401,9 @@ h1, h2, h3, h4, h5, .navbar-brand, .card-title, .offcanvas-title {
 }
 
 .splash-title {
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'Comfortaa', sans-serif;
   font-size: 4rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--accent-btn);
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -401,7 +411,8 @@ h1, h2, h3, h4, h5, .navbar-brand, .card-title, .offcanvas-title {
 }
 
 .splash-slogan {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 300;
   font-size: 1.25rem;
   color: var(--text-main);
   opacity: 0.85;

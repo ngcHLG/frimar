@@ -75,7 +75,7 @@ h1, h2, h3, h4, h5, .navbar-brand, .card-title, .offcanvas-title {
   background-color: var(--bg-surface);
   padding: 0.8rem 0;
   position: sticky;
-  top: 56px;
+  top: var(--navbar-height, 82px);
   z-index: 1020;
   overflow-x: auto;
   white-space: nowrap;

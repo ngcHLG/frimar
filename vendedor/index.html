@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FRIMAR - Panel Vendedor</title>
-  <link rel="icon" type="image/png" href="../icon_regular_small.png">
+  <link rel="icon" type="image/svg+xml" href="../icon_silueta.svg">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,700;1,300&family=Comfortaa:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/estilos.css?v=2.0">
+  <link rel="stylesheet" href="../css/estilos.css?v=3.0">
   <style>
     /* Íconos de sección en el navbar (punto de venta / pedidos / salir) */
     .nav-icon-btn {
@@ -34,7 +34,7 @@
   <nav class="navbar navbar-dark sticky-top py-3">
     <div class="container d-flex justify-content-between align-items-center">
       <a class="navbar-brand d-flex align-items-center m-0" href="#">
-        <img src="../icon_regular_small.png" alt="FRIMAR" style="height: 30px; width: 30px; object-fit: contain; margin-right: 0.5rem;">
+        <img src="../icon_silueta.svg" alt="FRIMAR" style="height: 30px; width: 30px; object-fit: contain; margin-right: 0.5rem;">
         FRIMAR
       </a>
       <div class="d-flex align-items-center gap-1">
@@ -152,7 +152,7 @@
     <!-- Toast de venta exitosa -->
     <div id="toastPedido" class="toast align-items-center" role="alert" data-bs-delay="4000" style="width: auto; max-width: 90vw; min-width: 280px; pointer-events: auto; background-color: rgba(20,20,20,0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); border-radius: 0.8rem; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
       <div class="d-flex align-items-center" style="padding: 1rem;">
-        <img src="../icon_regular_small.png" alt="FRIMAR" style="height: 28px; width: 28px; object-fit: contain; margin-right: 0.75rem; flex-shrink: 0;">
+        <img src="../icon_silueta.svg" alt="FRIMAR" style="height: 28px; width: 28px; object-fit: contain; margin-right: 0.75rem; flex-shrink: 0;">
         <div style="flex: 1 1 auto; min-width: 0; overflow: hidden;">
           <div style="font-weight: bold; font-size: 1rem; color: #ffffff;">Pedido cobrado</div>
           <div style="font-size: 0.85rem; color: #FCE029;">Venta en tienda</div>
@@ -162,7 +162,7 @@
     <!-- Toast de cantidad mínima (lo usa carrito.js) -->
     <div id="toastCantidadMinima" class="toast align-items-center" role="alert" data-bs-delay="3000" style="width: auto; max-width: 90vw; min-width: 280px; pointer-events: auto; background-color: rgba(20,20,20,0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); border-radius: 0.8rem; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
       <div class="d-flex align-items-center" style="padding: 1rem;">
-        <img src="../icon_regular_small.png" alt="FRIMAR" style="height: 28px; width: 28px; object-fit: contain; margin-right: 0.75rem; flex-shrink: 0;">
+        <img src="../icon_silueta.svg" alt="FRIMAR" style="height: 28px; width: 28px; object-fit: contain; margin-right: 0.75rem; flex-shrink: 0;">
         <div style="flex: 1 1 auto; min-width: 0; overflow: hidden;">
           <div style="font-weight: bold; font-size: 1rem; color: #ffffff;">Cantidad mínima</div>
           <div style="font-size: 0.85rem; white-space: normal; overflow-wrap: break-word; line-height: 1.3; min-height: 2.6em; color: #FCE029;" id="toast-min-text"></div>
@@ -180,7 +180,7 @@
 <script src="../js/cliente.js?v=2.1"></script>
 <script src="../js/carrito.js?v=2.1"></script>
 <script src="sobrescribir.js?v=2.3"></script>
-<script src="pedidos.js?v=2.2"></script>    
+<script src="pedidos.js?v=2.2"></script>
   <!-- 2. Ya puede usar la función global -->
   <!-- 6. Tema, moneda y control de secciones -->
   <script>
@@ -248,7 +248,7 @@
     // ── Inicialización ──
     (async () => {
       const sesion = await verificarSesion();
-      if (!sesion) return; // ya se está redirigiendo a login.html
+      if (!sesion) return;
 
       configurarSelectorMoneda();
       await cambiarSeccion('punto-venta');

@@ -1,8 +1,8 @@
 /* Identidad visual FRIMAR: el logotipo completo es un único vector, no texto + silueta separados. */
-.navbar-logo{display:block;width:auto!important;height:68px!important;max-width:300px;object-fit:contain;filter:brightness(0) invert(1)}
+.navbar .navbar-brand img.navbar-logo{display:block;width:auto!important;height:68px!important;max-width:300px!important;object-fit:contain;filter:brightness(0) invert(1)!important;margin-right:0!important}
 .navbar .navbar-brand{line-height:0}
 .splash-content{width:min(92vw,620px)}
 .splash-logo{display:block;width:min(82vw,520px)!important;height:auto!important;max-height:220px;object-fit:contain;filter:none!important}
 .toast-logo{display:block;width:96px!important;height:auto!important;max-height:44px;object-fit:contain;flex:0 0 auto;margin-right:.75rem;filter:none!important}
 .login-brand{display:block;width:min(300px,82%);height:auto;margin:0 auto .8rem;object-fit:contain}
-@media(max-width:500px){.navbar-logo{height:64px!important;max-width:285px}.splash-logo{width:82vw!important;max-width:360px;max-height:160px}.toast-logo{width:82px!important;max-height:38px}.login-brand{width:min(270px,88%)}}
+@media(max-width:500px){.navbar .navbar-brand img.navbar-logo{height:64px!important;max-width:285px!important}.splash-logo{width:82vw!important;max-width:360px;max-height:160px}.toast-logo{width:82px!important;max-height:38px}.login-brand{width:min(270px,88%)}}

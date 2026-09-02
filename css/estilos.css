@@ -74,6 +74,9 @@ h3, h4, h5, .card-title, .offcanvas-title {
 .navbar {
   background-color: var(--nav-bg) !important;
   border-bottom: 1px solid var(--border-color);
+  padding-top: 0.6rem !important;
+  padding-bottom: 0.6rem !important;
+  min-height: 62px;
 }
 
 .navbar-brand {
@@ -83,11 +86,18 @@ h3, h4, h5, .card-title, .offcanvas-title {
   text-transform: uppercase;
 }
 
+.navbar .navbar-brand img {
+  filter: brightness(0) invert(1);
+  width: 36px !important;
+  height: 36px !important;
+  margin-right: 0.65rem !important;
+}
+
 .categorias-nav {
   background-color: var(--bg-surface);
   padding: 0.8rem 0;
   position: sticky;
-  top: var(--navbar-height, 82px);
+  top: var(--navbar-height, 62px);
   z-index: 1020;
   overflow-x: auto;
   white-space: nowrap;
@@ -282,201 +292,57 @@ h3, h4, h5, .card-title, .offcanvas-title {
   text-transform: uppercase;
 }
 
-.moneda-chip:hover {
-  transform: scale(1.1);
-  background-color: var(--accent-hover);
-}
+.moneda-chip:hover { transform: scale(1.1); background-color: var(--accent-hover); }
 
-.offcanvas {
-  background-color: var(--bg-surface);
-  color: var(--text-main);
-  border-left: 1px solid var(--border-color);
-}
-
+.offcanvas { background-color: var(--bg-surface); color: var(--text-main); border-left: 1px solid var(--border-color); }
 .offcanvas-header { border-bottom: 1px solid var(--border-color); }
-
 [data-theme="dark"] .btn-close { filter: invert(1); }
-
-.offcanvas-body {
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  max-height: calc(100vh - 56px);
-}
-
-#carrito-lista {
-  flex: 1 1 auto;
-  overflow-y: auto;
-  min-height: 0;
-}
-
-.carrito-item {
-  background-color: var(--bg-surface);
-  border-color: var(--border-color);
-  color: var(--text-main);
-}
-
-.form-control, .form-select {
-  background-color: var(--bg-body);
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
-}
-
-.form-control:focus, .form-select:focus {
-  background-color: var(--bg-body);
-  color: var(--text-main);
-  border-color: var(--accent-btn);
-  box-shadow: none;
-}
-
-.modal-content {
-  background-color: var(--bg-surface);
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
-}
-
+.offcanvas-body { display: flex; flex-direction: column; overflow-y: auto; max-height: calc(100vh - 56px); }
+#carrito-lista { flex: 1 1 auto; overflow-y: auto; min-height: 0; }
+.carrito-item { background-color: var(--bg-surface); border-color: var(--border-color); color: var(--text-main); }
+.form-control, .form-select { background-color: var(--bg-body); color: var(--text-main); border: 1px solid var(--border-color); }
+.form-control:focus, .form-select:focus { background-color: var(--bg-body); color: var(--text-main); border-color: var(--accent-btn); box-shadow: none; }
+.modal-content { background-color: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border-color); }
 .modal-header { border-bottom: 1px solid var(--border-color); }
 .modal-footer { border-top: 1px solid var(--border-color); }
-
-.toast {
-  background-color: var(--bg-surface);
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
-}
-
-.badge-oferta {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 2;
-  background-color: var(--c-01);
-  color: var(--c-06);
-  font-weight: 700;
-  border-radius: 4px;
-  padding: 0.3rem 0.7rem;
-  font-size: 0.75rem;
-}
-
-.skeleton {
-  background: linear-gradient(90deg, var(--border-color) 25%, var(--bg-body) 50%, var(--border-color) 75%);
-  background-size: 200% 100%;
-  animation: skeleton-pulse 1.5s infinite;
-  border-radius: 4px;
-}
-
-@keyframes skeleton-pulse {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
+.toast { background-color: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border-color); }
+.badge-oferta { position: absolute; top: 10px; left: 10px; z-index: 2; background-color: var(--c-01); color: var(--c-06); font-weight: 700; border-radius: 4px; padding: 0.3rem 0.7rem; font-size: 0.75rem; }
+.skeleton { background: linear-gradient(90deg, var(--border-color) 25%, var(--bg-body) 50%, var(--border-color) 75%); background-size: 200% 100%; animation: skeleton-pulse 1.5s infinite; border-radius: 4px; }
+@keyframes skeleton-pulse { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 .skeleton-card { height: 320px; }
 .skeleton-chip { height: 35px; width: 90px; display: inline-block; }
 
-/* Pantalla de carga FRIMAR */
-.splash {
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background-color: var(--splash-bg);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  transition: opacity 0.5s ease;
-}
+/* Pantalla de carga: la silueta conserva su verde original y acompaña a FRIMAR */
+.splash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--splash-bg); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s ease; }
+.splash-content { display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 1rem; text-align: left; flex-wrap: nowrap; }
+.splash-logo { height: 76px; width: 76px; object-fit: contain; flex: 0 0 auto; }
+.splash-text { display: flex; flex-direction: column; align-items: flex-start; }
+.splash-title { font-family: 'Comfortaa', sans-serif; font-size: 4rem; font-weight: 700; color: var(--accent-fg); letter-spacing: 3px; text-transform: uppercase; line-height: 1; }
+.splash-slogan { font-family: 'Poppins', sans-serif; font-weight: 300; font-size: 1.1rem; color: var(--text-main); opacity: 0.85; margin-top: 0.35rem; }
 
-.splash-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 2rem;
-  padding: 1rem;
-  flex-wrap: wrap;
-  text-align: center;
-}
-
-.splash-logo {
-  height: 100px;
-  width: 100px;
-  object-fit: contain;
-}
-
-.splash-title {
-  font-family: 'Comfortaa', sans-serif;
-  font-size: 4rem;
-  font-weight: 700;
-  color: var(--accent-fg);
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  line-height: 1;
-}
-
-.splash-slogan {
-  font-family: 'Poppins', sans-serif;
-  font-weight: 300;
-  font-size: 1.25rem;
-  color: var(--text-main);
-  opacity: 0.85;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-  margin-top: 0.3rem;
-}
+/* Catálogo TODO: cada categoría tiene su propia fila con desplazamiento horizontal */
+.catalogo-categorias { display: flex; flex-direction: column; gap: 2rem; }
+.catalogo-categoria { min-width: 0; }
+.catalogo-categoria-titulo { font-family: 'Comfortaa', sans-serif; font-weight: 700; color: var(--text-main); margin-bottom: 0.8rem; }
+.productos-categoria-scroll { display: flex; gap: 1rem; overflow-x: auto; overflow-y: hidden; padding: 0.15rem 0.1rem 0.75rem; scroll-snap-type: x proximity; scrollbar-width: thin; }
+.productos-categoria-scroll .producto-col { flex: 0 0 280px; scroll-snap-align: start; }
 
 @media (max-width: 500px) {
-  .splash-content { flex-direction: column; gap: 1rem; }
-  .splash-logo { height: 70px; width: 70px; }
+  .navbar { min-height: 56px; }
+  .navbar .navbar-brand img { width: 32px !important; height: 32px !important; }
+  .categorias-nav { top: 56px; }
+  .splash-content { gap: 0.7rem; }
+  .splash-logo { height: 58px; width: 58px; }
   .splash-title { font-size: 2.5rem; }
-  .splash-slogan { font-size: 1rem; white-space: normal; }
+  .splash-slogan { font-size: 0.85rem; max-width: 65vw; }
+  .productos-categoria-scroll .producto-col { flex-basis: 78vw; }
 }
 
-/* Forzar textos muted */
-.text-muted {
-  color: var(--text-muted) !important;
-}
-
-/* Offcanvas de facturación */
-#facturacionOffcanvas .offcanvas-body {
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-}
-
-/* Alineación en ajustes de monedas */
-#monedas-ajustes-container .d-flex {
-  flex-wrap: nowrap;
-}
-
-/* Forzar fondo y texto del resumen de precios en el offcanvas */
-.offcanvas .bg-body {
-  background-color: var(--bg-surface) !important;
-  color: var(--text-main);
-}
-
-/* Asegurar que los textos muted dentro del resumen usen nuestro color secundario */
-.offcanvas .bg-body .text-muted {
-  color: var(--text-secondary) !important;
-}
-
-.btn-outline-accent {
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
-  background: transparent;
-  padding: 0.3rem 0.8rem;
-  font-size: 0.85rem;
-  border-radius: 4px;
-}
-.btn-outline-accent:hover {
-  background-color: var(--accent-btn);
-  color: var(--accent-text);
-  border-color: var(--accent-btn);
-}
-
-/* El estado informativo de Bootstrap era el último rastro azul del diseño.
-   FRIMAR usa burdeos/marrón para Confirmado, manteniendo el texto legible. */
-.badge.bg-info {
-  background-color: var(--frimar-burdeos) !important;
-  color: var(--c-06) !important;
-}
+.text-muted { color: var(--text-muted) !important; }
+#facturacionOffcanvas .offcanvas-body { display: flex; flex-direction: column; overflow-y: auto; }
+#monedas-ajustes-container .d-flex { flex-wrap: nowrap; }
+.offcanvas .bg-body { background-color: var(--bg-surface) !important; color: var(--text-main); }
+.offcanvas .bg-body .text-muted { color: var(--text-secondary) !important; }
+.btn-outline-accent { color: var(--text-main); border: 1px solid var(--border-color); background: transparent; padding: 0.3rem 0.8rem; font-size: 0.85rem; border-radius: 4px; }
+.btn-outline-accent:hover { background-color: var(--accent-btn); color: var(--accent-text); border-color: var(--accent-btn); }
+.badge.bg-info { background-color: var(--frimar-burdeos) !important; color: var(--c-06) !important; }

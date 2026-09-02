@@ -10,249 +10,66 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,700;1,300&family=Comfortaa:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/estilos.css?v=3.0">
+  <link rel="stylesheet" href="../css/estilos.css?v=4.0">
   <style>
-    /* Íconos de sección en el navbar (punto de venta / pedidos / salir) */
-    .nav-icon-btn {
-      background: transparent;
-      border: none;
-      color: var(--nav-text);
-      opacity: 0.6;
-      font-size: 1.3rem;
-      line-height: 1;
-      padding: 0.4rem 0.6rem;
-      border-radius: 6px;
-      transition: opacity 0.2s ease, background-color 0.2s ease;
-    }
+    .nav-icon-btn { background: transparent; border: none; color: var(--nav-text); opacity: 0.6; font-size: 1.3rem; line-height: 1; padding: 0.4rem 0.6rem; border-radius: 6px; transition: opacity 0.2s ease, background-color 0.2s ease; }
     .nav-icon-btn:hover { opacity: 1; background-color: rgba(255,255,255,0.08); }
     .nav-icon-btn.active { opacity: 1; background-color: rgba(255,255,255,0.14); }
   </style>
 </head>
 <body>
-
-  <!-- Navegación -->
   <nav class="navbar navbar-dark sticky-top py-3">
     <div class="container d-flex justify-content-between align-items-center">
-      <a class="navbar-brand d-flex align-items-center m-0" href="#">
-        <img src="../icon_silueta.svg" alt="FRIMAR" style="height: 30px; width: 30px; object-fit: contain; margin-right: 0.5rem;">
-        FRIMAR
+      <a class="navbar-brand d-flex align-items-center m-0" href="#" aria-label="frimar">
+        <img src="../logo_frimar.svg" alt="frimar — Sabor a Mi" class="navbar-logo">
       </a>
       <div class="d-flex align-items-center gap-1">
-        <button class="nav-icon-btn active" id="tab-punto-venta" title="Punto de venta" onclick="cambiarSeccion('punto-venta')">
-          <i class="bi bi-shop"></i>
-        </button>
-        <button class="nav-icon-btn" id="tab-pedidos" title="Pedidos" onclick="cambiarSeccion('pedidos')">
-          <i class="bi bi-receipt"></i>
-        </button>
-        <button class="nav-icon-btn" title="Salir" onclick="cerrarSesion()">
-          <i class="bi bi-box-arrow-right"></i>
-        </button>
+        <button class="nav-icon-btn active" id="tab-punto-venta" title="Punto de venta" onclick="cambiarSeccion('punto-venta')"><i class="bi bi-shop"></i></button>
+        <button class="nav-icon-btn" id="tab-pedidos" title="Pedidos" onclick="cambiarSeccion('pedidos')"><i class="bi bi-receipt"></i></button>
+        <button class="nav-icon-btn" title="Salir" onclick="cerrarSesion()"><i class="bi bi-box-arrow-right"></i></button>
       </div>
     </div>
   </nav>
-
-  <!-- Categorías (solo visible en Punto de venta) -->
-  <div class="categorias-nav" id="categorias-nav">
-    <div class="container" id="categorias-container">
-      <span class="skeleton skeleton-chip"></span>
-      <span class="skeleton skeleton-chip"></span>
-      <span class="skeleton skeleton-chip"></span>
-    </div>
-  </div>
-
-  <!-- Aviso de horario -->
-  <div id="horario-aviso" class="alert alert-secondary text-center mb-0 d-none rounded-0 border-0 border-bottom" role="alert">
-    <i class="bi bi-clock"></i> Fuera de servicio. <span id="horario-texto"></span>
-  </div>
-
-  <!-- Contenedor Principal -->
-  <main class="container my-5">
-    <div id="seccion-container"></div>
-  </main>
-
-  <!-- FABs -->
+  <div class="categorias-nav" id="categorias-nav"><div class="container" id="categorias-container"><span class="skeleton skeleton-chip"></span><span class="skeleton skeleton-chip"></span><span class="skeleton skeleton-chip"></span></div></div>
+  <div id="horario-aviso" class="alert alert-secondary text-center mb-0 d-none rounded-0 border-0 border-bottom" role="alert"><i class="bi bi-clock"></i> Fuera de servicio. <span id="horario-texto"></span></div>
+  <main class="container my-5"><div id="seccion-container"></div></main>
   <div class="fab-container">
-    <button id="btn-currency-toggle" class="fab-btn" aria-label="Cambiar moneda" title="Cambiar moneda">
-      <span id="current-currency-label" style="font-size: 0.9rem; font-weight: bold;">CUP</span>
-    </button>
-    <button id="btn-theme-toggle" class="fab-btn" aria-label="Alternar Tema">
-      <i class="bi bi-moon-stars-fill" id="theme-icon"></i>
-    </button>
-    <button id="btn-cart-fab" class="fab-btn" data-bs-toggle="offcanvas" data-bs-target="#carritoOffcanvas" aria-label="Ver venta actual">
-      <i class="bi bi-cart3"></i>
-      <span id="cart-badge">0</span>
-    </button>
+    <button id="btn-currency-toggle" class="fab-btn" aria-label="Cambiar moneda" title="Cambiar moneda"><span id="current-currency-label" style="font-size: 0.9rem; font-weight: bold;">CUP</span></button>
+    <button id="btn-theme-toggle" class="fab-btn" aria-label="Alternar Tema"><i class="bi bi-moon-stars-fill" id="theme-icon"></i></button>
+    <button id="btn-cart-fab" class="fab-btn" data-bs-toggle="offcanvas" data-bs-target="#carritoOffcanvas" aria-label="Ver venta actual"><i class="bi bi-cart3"></i><span id="cart-badge">0</span></button>
   </div>
-
-  <!-- Lista de monedas -->
   <div class="moneda-list" id="moneda-list"></div>
-
-  <!-- Offcanvas Carrito (venta actual) -->
   <div class="offcanvas offcanvas-end" tabindex="-1" id="carritoOffcanvas">
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title"><i class="bi bi-receipt"></i> Venta Actual</h5>
-      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
-    </div>
-    <div class="offcanvas-body d-flex flex-column">
-      <div id="carrito-lista" class="list-group mb-3 flex-grow-1 overflow-auto" style="max-height: calc(100vh - 380px); min-height: 200px;"></div>
-
+    <div class="offcanvas-header"><h5 class="offcanvas-title"><i class="bi bi-receipt"></i> Venta Actual</h5><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button></div>
+    <div class="offcanvas-body d-flex flex-column"><div id="carrito-lista" class="list-group mb-3 flex-grow-1 overflow-auto" style="max-height: calc(100vh - 380px); min-height: 200px;"></div>
       <div class="mt-auto">
-        <!-- Método de pago: se muestra solo si la moneda activa admite
-             más de un método (lo controla cliente.js, sin overrides) -->
-        <div class="mb-3 d-none" id="metodo-pago-container">
-          <label class="form-label fw-bold">Método de pago</label>
-          <select id="metodo-pago" class="form-select" onchange="actualizarCarrito()">
-            <option value="efectivo">Efectivo</option>
-            <option value="transferencia">Transferencia</option>
-          </select>
-          <small id="recargo-info" class="text-muted mt-1 d-none"></small>
-        </div>
-
-        <!-- Reparto: existe en el DOM para que cliente.js/carrito.js no
-             fallen, pero sobrescribir.js lo mantiene siempre oculto -->
-        <div class="mb-3 d-none" id="reparto-container">
-          <label class="form-label fw-bold">Reparto</label>
-          <input type="text" class="form-control" list="repartos-list" id="reparto-input" placeholder="Buscar reparto..." onchange="seleccionarReparto(this.value)">
-          <datalist id="repartos-list"></datalist>
-          <small id="reparto-precio" class="text-muted"></small>
-        </div>
-
-        <div class="bg-body p-3 rounded border">
-          <div class="d-flex justify-content-between text-muted mb-1">
-            <span>Subtotal:</span>
-            <span><span id="subtotal-carrito">0.00</span> <span id="subtotal-moneda">CUP</span></span>
-          </div>
-          <div id="recargo-desglose" class="d-flex justify-content-between text-muted mb-1 d-none">
-            <span>Recargo:</span>
-            <span><span id="recargo-aplicado">0.00</span> <span id="recargo-moneda">CUP</span></span>
-          </div>
-          <div id="envio-desglose" class="d-flex justify-content-between text-muted mb-2 d-none">
-            <span>Envío:</span>
-            <span><span id="envio-aplicado">0.00</span> <span id="envio-moneda">CUP</span></span>
-          </div>
-          <div id="envio-cup-desglose" class="d-flex justify-content-between text-muted mb-2 d-none">
-            <span>Envío (CUP):</span>
-            <span><span id="envio-cup-aplicado">0.00</span> CUP</span>
-          </div>
-          <div class="d-flex justify-content-between fw-bold fs-5 border-top border-secondary pt-2 mt-2">
-            <span>Total:</span>
-            <span><span id="total-pedido">0.00</span> <span id="total-moneda">CUP</span></span>
-          </div>
-        </div>
-
-        <button id="btn-checkout" class="btn btn-accent w-100 mt-3 py-2" disabled>
-          Cobrar pedido
-        </button>
+        <div class="mb-3 d-none" id="metodo-pago-container"><label class="form-label fw-bold">Método de pago</label><select id="metodo-pago" class="form-select" onchange="actualizarCarrito()"><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia</option></select><small id="recargo-info" class="text-muted mt-1 d-none"></small></div>
+        <div class="mb-3 d-none" id="reparto-container"><label class="form-label fw-bold">Reparto</label><input type="text" class="form-control" list="repartos-list" id="reparto-input" placeholder="Buscar reparto..." onchange="seleccionarReparto(this.value)"><datalist id="repartos-list"></datalist><small id="reparto-precio" class="text-muted"></small></div>
+        <div class="bg-body p-3 rounded border"><div class="d-flex justify-content-between text-muted mb-1"><span>Subtotal:</span><span><span id="subtotal-carrito">0.00</span> <span id="subtotal-moneda">CUP</span></span></div><div id="recargo-desglose" class="d-flex justify-content-between text-muted mb-1 d-none"><span>Recargo:</span><span><span id="recargo-aplicado">0.00</span> <span id="recargo-moneda">CUP</span></span></div><div id="envio-desglose" class="d-flex justify-content-between text-muted mb-2 d-none"><span>Envío:</span><span><span id="envio-aplicado">0.00</span> <span id="envio-moneda">CUP</span></span></div><div id="envio-cup-desglose" class="d-flex justify-content-between text-muted mb-2 d-none"><span>Envío (CUP):</span><span><span id="envio-cup-aplicado">0.00</span> CUP</span></div><div class="d-flex justify-content-between fw-bold fs-5 border-top border-secondary pt-2 mt-2"><span>Total:</span><span><span id="total-pedido">0.00</span> <span id="total-moneda">CUP</span></span></div></div>
+        <button id="btn-checkout" class="btn btn-accent w-100 mt-3 py-2" disabled>Cobrar pedido</button>
       </div>
     </div>
   </div>
-
-  <!-- Contenedor Toasts -->
   <div aria-live="polite" aria-atomic="true" style="position: fixed; bottom: 20px; left: 20px; right: 20px; z-index: 1060; display: flex; justify-content: center; pointer-events: none; flex-direction: column; align-items: center; gap: 10px;">
-    <!-- Toast de venta exitosa -->
-    <div id="toastPedido" class="toast align-items-center" role="alert" data-bs-delay="4000" style="width: auto; max-width: 90vw; min-width: 280px; pointer-events: auto; background-color: rgba(20,20,20,0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); border-radius: 0.8rem; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-      <div class="d-flex align-items-center" style="padding: 1rem;">
-        <img src="../icon_silueta.svg" alt="FRIMAR" style="height: 28px; width: 28px; object-fit: contain; margin-right: 0.75rem; flex-shrink: 0;">
-        <div style="flex: 1 1 auto; min-width: 0; overflow: hidden;">
-          <div style="font-weight: bold; font-size: 1rem; color: #ffffff;">Pedido cobrado</div>
-          <div style="font-size: 0.85rem; color: #FCE029;">Venta en tienda</div>
-        </div>
-      </div>
-    </div>
-    <!-- Toast de cantidad mínima (lo usa carrito.js) -->
-    <div id="toastCantidadMinima" class="toast align-items-center" role="alert" data-bs-delay="3000" style="width: auto; max-width: 90vw; min-width: 280px; pointer-events: auto; background-color: rgba(20,20,20,0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); border-radius: 0.8rem; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-      <div class="d-flex align-items-center" style="padding: 1rem;">
-        <img src="../icon_silueta.svg" alt="FRIMAR" style="height: 28px; width: 28px; object-fit: contain; margin-right: 0.75rem; flex-shrink: 0;">
-        <div style="flex: 1 1 auto; min-width: 0; overflow: hidden;">
-          <div style="font-weight: bold; font-size: 1rem; color: #ffffff;">Cantidad mínima</div>
-          <div style="font-size: 0.85rem; white-space: normal; overflow-wrap: break-word; line-height: 1.3; min-height: 2.6em; color: #FCE029;" id="toast-min-text"></div>
-        </div>
-      </div>
-    </div>
+    <div id="toastPedido" class="toast align-items-center" role="alert" data-bs-delay="4000" style="width: auto; max-width: 90vw; min-width: 280px; pointer-events: auto; background-color: rgba(20,20,20,0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); border-radius: 0.8rem; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"><div class="d-flex align-items-center" style="padding: 1rem;"><img src="../logo_frimar.svg" alt="frimar" class="toast-logo"><div style="flex: 1 1 auto; min-width: 0;"><div style="font-weight: bold; font-size: 1rem; color: #ffffff;">Pedido cobrado</div><div style="font-size: 0.85rem; color: #FCE029;">Venta en tienda</div></div></div></div>
+    <div id="toastCantidadMinima" class="toast align-items-center" role="alert" data-bs-delay="3000" style="width: auto; max-width: 90vw; min-width: 280px; pointer-events: auto; background-color: rgba(20,20,20,0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); border-radius: 0.8rem; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"><div class="d-flex align-items-center" style="padding: 1rem;"><img src="../logo_frimar.svg" alt="frimar" class="toast-logo"><div style="flex: 1 1 auto; min-width: 0;"><div style="font-weight: bold; font-size: 1rem; color: #ffffff;">Cantidad mínima</div><div style="font-size: 0.85rem; white-space: normal; overflow-wrap: break-word; line-height: 1.3; min-height: 2.6em; color: #FCE029;" id="toast-min-text"></div></div></div></div>
   </div>
-
-  <!-- 1. Librerías CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-  <script src="comun.js?v=2.3"></script>      <!-- 1. Define window.notificarStockBajo -->
-<script src="../js/config.js?v=2.1"></script>
-<script src="../js/cliente.js?v=2.1"></script>
-<script src="../js/carrito.js?v=2.1"></script>
-<script src="sobrescribir.js?v=2.3"></script>
-<script src="pedidos.js?v=2.2"></script>
-  <!-- 2. Ya puede usar la función global -->
-  <!-- 6. Tema, moneda y control de secciones -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="comun.js?v=2.3"></script><script src="../js/config.js?v=2.1"></script><script src="../js/cliente.js?v=2.1"></script><script src="../js/carrito.js?v=2.1"></script><script src="sobrescribir.js?v=2.3"></script><script src="pedidos.js?v=2.2"></script>
   <script>
-    // ── Tema con persistencia (idéntico al cliente) ──
-    const btnThemeToggle = document.getElementById('btn-theme-toggle');
-    const themeIcon = document.getElementById('theme-icon');
-
-    function aplicarTema(tema) {
-      document.documentElement.setAttribute('data-theme', tema);
-      themeIcon.className = tema === 'light' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
-      localStorage.setItem('frimar-theme', tema);
-    }
-
-    const temaGuardado = localStorage.getItem('frimar-theme') || 'light';
-    aplicarTema(temaGuardado);
-
-    btnThemeToggle.addEventListener('click', () => {
-      const actual = document.documentElement.getAttribute('data-theme');
-      aplicarTema(actual === 'light' ? 'dark' : 'light');
-    });
-
-    // ── Control de secciones (Punto de venta / Pedidos) ──
+    const btnThemeToggle = document.getElementById('btn-theme-toggle'); const themeIcon = document.getElementById('theme-icon');
+    function aplicarTema(tema) { document.documentElement.setAttribute('data-theme', tema); themeIcon.className = tema === 'light' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill'; localStorage.setItem('frimar-theme', tema); }
+    aplicarTema(localStorage.getItem('frimar-theme') || 'light');
+    btnThemeToggle.addEventListener('click', () => { const actual = document.documentElement.getAttribute('data-theme'); aplicarTema(actual === 'light' ? 'dark' : 'light'); });
     let intervalPedidos = null;
-
     async function cambiarSeccion(id) {
-      document.getElementById('tab-punto-venta').classList.toggle('active', id === 'punto-venta');
-      document.getElementById('tab-pedidos').classList.toggle('active', id === 'pedidos');
-
+      document.getElementById('tab-punto-venta').classList.toggle('active', id === 'punto-venta'); document.getElementById('tab-pedidos').classList.toggle('active', id === 'pedidos');
       if (intervalPedidos) { clearInterval(intervalPedidos); intervalPedidos = null; }
-
-      const catNav = document.getElementById('categorias-nav');
-      const seccion = document.getElementById('seccion-container');
-
-      if (id === 'punto-venta') {
-        catNav.classList.remove('d-none');
-        seccion.innerHTML = `
-          <h2 class="mb-4 d-flex align-items-center gap-2">
-            <i class="bi bi-shop text-secondary"></i> Punto de Venta
-          </h2>
-          <div id="productos-container" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-            <div class="col"><div class="skeleton skeleton-card"></div></div>
-            <div class="col"><div class="skeleton skeleton-card"></div></div>
-            <div class="col"><div class="skeleton skeleton-card"></div></div>
-            <div class="col"><div class="skeleton skeleton-card"></div></div>
-          </div>
-        `;
-        await cargarMonedas();
-        await cargarConfiguracion();
-        await cargarCategorias();
-        await cargarProductos();
-        await verificarCombosActivos();
-        await cargarRepartosEnvio();
-        renderCategorias();
-        await verificarHorario();
-        renderProductos();
-      } else {
-        catNav.classList.add('d-none');
-        document.getElementById('horario-aviso').classList.add('d-none');
-        seccion.innerHTML = '';
-        window.pedidos.init(seccion);
-        intervalPedidos = setInterval(() => window.pedidos.init(seccion), 30000);
-      }
+      const catNav = document.getElementById('categorias-nav'); const seccion = document.getElementById('seccion-container');
+      if (id === 'punto-venta') { catNav.classList.remove('d-none'); seccion.innerHTML = `<h2 class="mb-4 d-flex align-items-center gap-2"><i class="bi bi-shop text-secondary"></i> Punto de Venta</h2><div id="productos-container" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4"><div class="col"><div class="skeleton skeleton-card"></div></div><div class="col"><div class="skeleton skeleton-card"></div></div><div class="col"><div class="skeleton skeleton-card"></div></div><div class="col"><div class="skeleton skeleton-card"></div></div></div>`; await cargarMonedas(); await cargarConfiguracion(); await cargarCategorias(); await cargarProductos(); await verificarCombosActivos(); await cargarRepartosEnvio(); renderCategorias(); await verificarHorario(); renderProductos(); }
+      else { catNav.classList.add('d-none'); document.getElementById('horario-aviso').classList.add('d-none'); seccion.innerHTML = ''; window.pedidos.init(seccion); intervalPedidos = setInterval(() => window.pedidos.init(seccion), 30000); }
     }
-
-    // ── Inicialización ──
-    (async () => {
-      const sesion = await verificarSesion();
-      if (!sesion) return;
-
-      configurarSelectorMoneda();
-      await cambiarSeccion('punto-venta');
-    })();
+    (async () => { const sesion = await verificarSesion(); if (!sesion) return; configurarSelectorMoneda(); await cambiarSeccion('punto-venta'); })();
   </script>
 </body>
 </html>

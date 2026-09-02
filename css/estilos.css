@@ -473,3 +473,10 @@ h3, h4, h5, .card-title, .offcanvas-title {
   color: var(--accent-text);
   border-color: var(--accent-btn);
 }
+
+/* El estado informativo de Bootstrap era el último rastro azul del diseño.
+   FRIMAR usa burdeos/marrón para Confirmado, manteniendo el texto legible. */
+.badge.bg-info {
+  background-color: var(--frimar-burdeos) !important;
+  color: var(--c-06) !important;
+}

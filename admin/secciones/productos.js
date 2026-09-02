@@ -45,9 +45,7 @@ function modalHTML() {
                     <th style="width: 90px; padding: 0.3rem;">Cant. mín.</th>
                   </tr>
                 </thead>
-                <tbody id="monedas-ajustes-container">
-                  <!-- dinámico -->
-                </tbody>
+                <tbody id="monedas-ajustes-container"><!-- dinámico --></tbody>
               </table>
             </div>
           </div>
@@ -65,13 +63,11 @@ function modalHTML() {
 async function llenarMonedasAjustes(preciosExistentes = {}) {
   const tbody = document.getElementById('monedas-ajustes-container');
   if (!tbody) return;
-
   const { data: monedas, error } = await window.guajiroPC.from('monedas').select('codigo').eq('activo', true).order('codigo');
   if (error || !monedas) {
     tbody.innerHTML = '<tr><td colspan="3" class="text-muted">No hay monedas disponibles.</td></tr>';
     return;
   }
-
   tbody.innerHTML = monedas.map(m => {
     const datos = preciosExistentes[m.codigo] || {};
     const checked = datos.precio !== undefined ? 'checked' : '';
@@ -79,20 +75,10 @@ async function llenarMonedasAjustes(preciosExistentes = {}) {
     const cantidadMinima = datos.min || 1;
     return `
       <tr>
-        <td style="vertical-align: middle; padding: 0.3rem;">
-          <div class="form-check mb-0">
-            <input class="form-check-input moneda-check" type="checkbox" id="moneda-${m.codigo}" value="${m.codigo}" ${checked} onchange="toggleAjusteMoneda('${m.codigo}')">
-            <label class="form-check-label" for="moneda-${m.codigo}">${m.codigo}</label>
-          </div>
-        </td>
-        <td style="vertical-align: middle; padding: 0.3rem;">
-          <input type="number" step="0.01" min="0" class="form-control form-control-sm" id="precio-${m.codigo}" value="${precioValor}" style="width: 100px;" ${checked ? '' : 'disabled'}>
-        </td>
-        <td style="vertical-align: middle; padding: 0.3rem;">
-          <input type="number" step="1" min="1" class="form-control form-control-sm" id="min-${m.codigo}" value="${cantidadMinima}" style="width: 70px;" ${checked ? '' : 'disabled'}>
-        </td>
-      </tr>
-    `;
+        <td style="vertical-align: middle; padding: 0.3rem;"><div class="form-check mb-0"><input class="form-check-input moneda-check" type="checkbox" id="moneda-${m.codigo}" value="${m.codigo}" ${checked} onchange="toggleAjusteMoneda('${m.codigo}')"><label class="form-check-label" for="moneda-${m.codigo}">${m.codigo}</label></div></td>
+        <td style="vertical-align: middle; padding: 0.3rem;"><input type="number" step="0.01" min="0" class="form-control form-control-sm" id="precio-${m.codigo}" value="${precioValor}" style="width: 100px;" ${checked ? '' : 'disabled'}></td>
+        <td style="vertical-align: middle; padding: 0.3rem;"><input type="number" step="1" min="1" class="form-control form-control-sm" id="min-${m.codigo}" value="${cantidadMinima}" style="width: 70px;" ${checked ? '' : 'disabled'}></td>
+      </tr>`;
   }).join('');
 }
 
@@ -110,39 +96,49 @@ window.toggleAjusteMoneda = function(codigo) {
 };
 
 async function cargarProductos() {
-  const { data } = await window.guajiroPC.from('productos').select('*, categorias(nombre)').order('nombre');
   const cont = document.getElementById('productos-lista');
-  if (!data || data.length === 0) {
-    cont.innerHTML = '<p class="text-muted text-center">No hay productos aún.</p>';
-    return;
-  }
-  cont.innerHTML = data.map(p => {
-    const precios = p.precios || {};
-    const preciosTexto = Object.keys(precios).map(moneda => {
-      const info = precios[moneda];
-      if (typeof info === 'object') {
-        return `${moneda}: ${info.precio} (mín. ${info.min || 1})`;
-      } else {
-        return `${moneda}: ${parseFloat(info).toFixed(2)}`;
-      }
-    }).join(' · ') || 'Sin precios';
+  if (!cont) return;
+  cont.innerHTML = '<p class="text-muted text-center">Cargando productos...</p>';
 
-    return `
-    <div class="list-item" style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; padding:0.8rem 1rem; margin-bottom:0.8rem; display:flex; align-items:center; justify-content:space-between;">
-      <div class="item-info" style="display:flex; align-items:center; gap:1rem; flex-grow:1;">
-        <img src="${p.foto_url || ''}" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:4px;" onerror="this.style.display='none'">
-        <span class="item-name" style="font-weight:600; text-transform:uppercase;">${p.nombre}</span>
-        <span style="font-size:0.85rem; color:var(--text-secondary);">Stock: ${p.stock ?? 0}</span>
-        <span style="font-size:0.85rem; color:var(--text-secondary);">${preciosTexto}</span>
-        <span style="font-size:0.85rem;">${p.activo ? 'Visible' : 'Oculto'}</span>
-      </div>
-      <div class="d-flex gap-1">
-        <button class="btn btn-outline-accent btn-sm" onclick="window.productos.editar('${p.id}')"><i class="bi bi-pencil"></i></button>
-        <button class="btn btn-outline-accent btn-sm" onclick="window.productos.toggle('${p.id}')"><i class="bi ${p.activo ? 'bi-eye-slash' : 'bi-eye'}"></i></button>
-        <button class="btn btn-outline-accent btn-sm" onclick="window.productos.eliminar('${p.id}')"><i class="bi bi-trash"></i></button>
-      </div>
-    </div>`;
-  }).join('');
+  try {
+    // No dependemos de la relación embebida productos -> categorias para cargar la lista.
+    // La lista de productos debe funcionar aunque PostgREST no exponga esa relación.
+    const { data, error } = await window.guajiroPC.from('productos').select('*').order('nombre');
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      cont.innerHTML = '<p class="text-muted text-center">No hay productos aún.</p>';
+      return;
+    }
+
+    cont.innerHTML = data.map(p => {
+      const precios = p.precios || {};
+      const preciosTexto = Object.keys(precios).map(moneda => {
+        const info = precios[moneda];
+        if (typeof info === 'object') return `${moneda}: ${info.precio} (mín. ${info.min || 1})`;
+        return `${moneda}: ${parseFloat(info).toFixed(2)}`;
+      }).join(' · ') || 'Sin precios';
+
+      return `
+      <div class="list-item" style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; padding:0.8rem 1rem; margin-bottom:0.8rem; display:flex; align-items:center; justify-content:space-between;">
+        <div class="item-info" style="display:flex; align-items:center; gap:1rem; flex-grow:1;">
+          <img src="${p.foto_url || ''}" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:4px;" onerror="this.style.display='none'">
+          <span class="item-name" style="font-weight:600; text-transform:uppercase;">${p.nombre}</span>
+          <span style="font-size:0.85rem; color:var(--text-secondary);">Stock: ${p.stock ?? 0}</span>
+          <span style="font-size:0.85rem; color:var(--text-secondary);">${preciosTexto}</span>
+          <span style="font-size:0.85rem;">${p.activo ? 'Visible' : 'Oculto'}</span>
+        </div>
+        <div class="d-flex gap-1">
+          <button class="btn btn-outline-accent btn-sm" onclick="window.productos.editar('${p.id}')"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-outline-accent btn-sm" onclick="window.productos.toggle('${p.id}')"><i class="bi ${p.activo ? 'bi-eye-slash' : 'bi-eye'}"></i></button>
+          <button class="btn btn-outline-accent btn-sm" onclick="window.productos.eliminar('${p.id}')"><i class="bi bi-trash"></i></button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (error) {
+    console.error('Error cargando productos:', error);
+    cont.innerHTML = '<p class="text-danger text-center">No se pudieron cargar los productos. Intenta recargar la sección.</p>';
+  }
 }
 
 async function cargarCategoriasEnSelect() {
@@ -164,7 +160,7 @@ function previewFoto(e) {
     const reader = new FileReader();
     reader.onload = ev => { preview.src = ev.target.result; preview.classList.remove('d-none'); };
     reader.readAsDataURL(file);
-  } else { preview.classList.add('d-none'); }
+  } else preview.classList.add('d-none');
 }
 
 async function guardar() {
@@ -174,7 +170,6 @@ async function guardar() {
   const categoria_id = document.getElementById('prod-categoria').value || null;
   const permite_extras = document.getElementById('prod-extras').checked;
   const archivo = document.getElementById('prod-foto').files[0];
-
   if (!nombre) { alert('El nombre es obligatorio'); return; }
 
   const precios = {};
@@ -184,15 +179,9 @@ async function guardar() {
     const minInput = document.getElementById(`min-${moneda}`);
     const precio = parseFloat(precioInput.value);
     const min = parseInt(minInput.value) || 1;
-    if (precioInput.value !== '' && !isNaN(precio) && precio >= 0) {
-      precios[moneda] = { precio: precio, min: min };
-    }
+    if (precioInput.value !== '' && !isNaN(precio) && precio >= 0) precios[moneda] = { precio, min };
   });
-
-  if (Object.keys(precios).length === 0) {
-    alert('Debes marcar al menos una moneda con precio.');
-    return;
-  }
+  if (Object.keys(precios).length === 0) { alert('Debes marcar al menos una moneda con precio.'); return; }
 
   let foto_url = null;
   if (archivo) {
@@ -208,7 +197,6 @@ async function guardar() {
   }
 
   const datos = { nombre, descripcion, categoria_id, permite_extras, foto_url, precios };
-
   if (id) {
     const { error } = await window.guajiroPC.from('productos').update(datos).eq('id', id);
     if (error) { alert('Error al actualizar: ' + error.message); return; }
@@ -216,7 +204,6 @@ async function guardar() {
     const { error } = await window.guajiroPC.from('productos').insert([{ ...datos, activo: true }]);
     if (error) { alert('Error al crear: ' + error.message); return; }
   }
-
   bootstrap.Modal.getInstance(document.getElementById('productoModal')).hide();
   cargarProductos();
 }
@@ -224,7 +211,6 @@ async function guardar() {
 window.productos.editar = async function(id) {
   const { data, error } = await window.guajiroPC.from('productos').select('*').eq('id', id).single();
   if (error || !data) return;
-
   document.getElementById('prod-id').value = data.id;
   document.getElementById('prod-nombre').value = data.nombre;
   document.getElementById('prod-descripcion').value = data.descripcion || '';
@@ -235,13 +221,8 @@ window.productos.editar = async function(id) {
   const preciosConvertidos = {};
   Object.keys(precios).forEach(moneda => {
     const valor = precios[moneda];
-    if (typeof valor === 'object') {
-      preciosConvertidos[moneda] = valor;
-    } else {
-      preciosConvertidos[moneda] = { precio: parseFloat(valor), min: 1 };
-    }
+    preciosConvertidos[moneda] = typeof valor === 'object' ? valor : { precio: parseFloat(valor), min: 1 };
   });
-
   await llenarMonedasAjustes(preciosConvertidos);
 
   document.getElementById('prod-foto').value = '';
@@ -249,9 +230,7 @@ window.productos.editar = async function(id) {
   if (data.foto_url) {
     preview.src = data.foto_url;
     preview.classList.remove('d-none');
-  } else {
-    preview.classList.add('d-none');
-  }
+  } else preview.classList.add('d-none');
   document.getElementById('prod-modal-titulo').textContent = 'Editar producto';
   new bootstrap.Modal(document.getElementById('productoModal')).show();
 };

@@ -1,17 +1,17 @@
 /* admin/css/admin.css - Estilos específicos del panel de administración */
 
 :root {
-  --c-01: #0D111B;
-  --c-02: #16202D;
-  --c-03: #39546A;
+  --c-01: #2B0A14;
+  --c-02: #3A2720;
   --c-04: #8A8D91;
-  --c-05: #A7D6E8;
   --c-06: #F2F2F2;
   --c-white: #FFFFFF;
   --frimar-verde: #77901D;
   --frimar-burdeos: #2B0A14;
   --frimar-naranja: #E87003;
   --frimar-marron: #924B02;
+  --frimar-dark-bg: #16100D;
+  --frimar-dark-surface: #241B17;
 }
 
 [data-theme="light"] {
@@ -31,19 +31,19 @@
 }
 
 [data-theme="dark"] {
-  --bg-body: var(--c-01);
-  --bg-surface: var(--c-02);
+  --bg-body: var(--frimar-dark-bg);
+  --bg-surface: var(--frimar-dark-surface);
   --text-main: var(--c-06);
   --text-secondary: var(--frimar-naranja);
   --text-muted: var(--c-04);
   --border-color: rgba(138, 141, 145, 0.25);
-  --accent-btn: var(--frimar-burdeos);
+  --accent-btn: var(--frimar-marron);
   --accent-fg: var(--frimar-naranja);
   --accent-text: var(--c-06);
   --accent-hover: var(--frimar-naranja);
-  --nav-bg: var(--frimar-burdeos);
+  --nav-bg: var(--frimar-marron);
   --nav-text: var(--c-06);
-  --modal-bg: var(--c-02);
+  --modal-bg: var(--frimar-dark-surface);
   --modal-backdrop: rgba(0,0,0,0.7);
 }
 
@@ -289,7 +289,7 @@ h2, h3, h4 {
 .edit-panel input,
 .edit-panel .btn {
   border-radius: 4px;
-  }
+}
 /* Uniformidad de botones e inputs */
 .btn-sm {
   padding: 0.25rem 0.6rem !important;

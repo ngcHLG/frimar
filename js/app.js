@@ -44,6 +44,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   await cargarRepartosEnvio();
   renderCategorias();
   await verificarHorario();
+
+  // Vista especial de TODO: filas horizontales por categoría.
+  const catalogoScript = document.createElement('script');
+  catalogoScript.src = 'js/catalogo-horizontal.js?v=1.0';
+  await new Promise(resolve => {
+    catalogoScript.onload = resolve;
+    catalogoScript.onerror = resolve;
+    document.body.appendChild(catalogoScript);
+  });
+
   renderProductos();
 
   configurarSelectorMoneda();
